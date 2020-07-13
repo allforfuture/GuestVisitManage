@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="layui-col-sm10 layui-col-sm-offset1">
+<fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
+  <legend>个人确认记录查询&nbsp;&nbsp;<span class="fs14">(按确认日期搜索)</span></legend>
+</fieldset>
+</div>
+
+<div class="layui-form layui-col-sm-offset1" style="width:1100px">
+  <div class="layui-form-item">
+    <div class="layui-inline">
+      <label class="layui-form-label">起始日期:</label>
+      <div class="layui-input-inline">
+        <input id="begindate" lay-verify="required" autocomplete="off" class="layui-input" placeholder="请输入起始时间">
+      </div>
+      <div class="layui-form-mid cred fs16" style="padding-top:12px !important">*</div>
+    </div>
+    <div class="layui-inline">
+      <label class="layui-form-label">截止日期:</label>
+      <div class="layui-input-inline">
+        <input id="enddate" lay-verify="required" autocomplete="off" class="layui-input" placeholder="请输入结束时间">
+      </div>
+      <div class="layui-form-mid cred fs16" style="padding-top:12px !important">*</div>
+    </div>
+    <div class="layui-btn" style="margin-top:-9px" onclick="search_confirm_data()">点击搜索</div>
+  </div>
+</div>
+
+<table class="layui-hide" id="table_test" lay-filter="filter_test"></table>
+
+<script>
+  var $ = '';
+  var form = '';
+  var table = '';
+  layui.use(['jquery', 'laydate', 'table'], function(){
+    $ = layui.jquery;
+    layer = layui.layer;
+    laydate = layui.laydate;
+    table = layui.table;
+
+    laydate.render({                //起始日期
+      elem:'#begindate',
+      type:'date',
+      format: 'yyyy-MM-dd',
+      value: new Date()
+    });
+
+    laydate.render({                //结束日期
+      elem:'#enddate',
+      type:'date',
+      format:'yyyy-MM-dd',
+      value:new Date()
+    });
+
+      //执行一个 table 实例
+    table.render({
+      elem: '#table_test'
+      ,url: '/get_confirm_data' //数据接口
+      ,totalRow: true //开启合计行
+      ,cols: [[ //表头
+        {field: 'index', title: '序号'}
+        ,{field: 'visit_name', title: '访客姓名'}
+        ,{field: 'schedule_date', title: '来访日期'}
+        ,{field: 'schedule_time', title: '来访时间'}
+        ,{field: 'approve_time', title: '确认时间'}
+        ,{field: 'visit_company', title: '所属单位（公司）'}
+        ,{field: 'visit_depart', title: '被访部门'}
+        ,{field: 'register_name', title: '登记人'}
+      ]]
+    });
+  });
+
+  function search_confirm_data(){
+    let begindate = $('#begindate').val();
+    let enddate = $('#enddate').val();
+    table.reload('table_test', {
+      url: '/get_confirm_data'
+      ,where: { //设定异步数据接口的额外参数
+        begindate: begindate,
+        enddate: enddate
+      }
+    });
+  }
+
+</script>
+{% endblock %}

@@ -1,0 +1,17 @@
+发放临时厂牌的SQL语句http://172.27.32.30:8004/index
+select *
+from(
+	select tva.data_seq,tva.visitor,tva.identity_no,tva.schedule_date,tva.schedule_time,tva.company,tva.approve_status,
+	u.user_name,u.depart,u.contact_info,tva.approver_id
+	from t_visit_apply tva,m_user u
+	where tva.schedule_date = '{2020-07-13}'
+	and tva.employee_id = u.user_id
+	and data_seq not in (
+		select distinct(data_seq)
+		from t_visit_record)
+) as a
+left join(select user_id,user_name from m_user) as b on a.approver_id = b.user_id 
+order by a.approver_id asc, a.schedule_date asc, a.schedule_time asc
+
+问题：
+有预约的'徐洲'在'发放临时厂牌'的http://172.27.32.30:8004/index找不到。原因是SQL里'and data_seq not in (select distinct(data_seq)from t_visit_record)'的条件限制，显示该预约单号已进行

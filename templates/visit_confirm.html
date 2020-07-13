@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    
+    <fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
+      <legend>{{ today }}</legend>
+    </fieldset>
+    
+    <table class="layui-table" lay-even>
+        <thead>
+          <tr>
+            <th>访客姓名</th>
+            <th>来访日期</th>
+            <th>来访时间</th>
+            <th>所属公司（单位）</th>
+            <th>登记人信息</th>
+            <th>确认状态</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="tbody" class="hide">
+          <tr>
+            <td>张三</td>
+            <td>8月12号</td>
+            <td>12:43</td>
+            <td>Nidec</td>
+            <td style="cursor:pointer" onclick="getTips(this)">
+                <span>马申</span>
+                <div class="hide">
+                    <table>
+                        <tr>
+                            <td class="w100 td-item">部门:</td>
+                            <td>信息系统部</td>
+                        </tr>
+                        <tr>
+                            <td class="w100 td-item">电话:</td>
+                            <td>1762052xxx</td>
+                        </tr>
+                        <tr>
+                            <td class="w100 td-item">邮箱:</td>
+                            <td>ma.yun@nidec.com</td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+            <td>待确认</td>
+            <td class="pad0_10">
+                <button class="layui-btn layui-btn-primary layui-btn-sm layui-bg-green" onclick="visit_confirm(this)">
+                点击确认
+                </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+<script type="text/javascript">
+
+    initConfirmTable()
+
+    //初始化待确认访客数据
+    function initConfirmTable(){
+        layui.use('jquery',function(){
+            $ = layui.jquery;
+            list = '{{data}}'.replace(/&quot;/g,'\"').replace(/\n/g,'\\n').replace(/\t/g,'');
+            list = JSON.parse(list)
+            str = ''
+            if(list.length > 0){
+                for(var i=0;i<list.length;i++){
+                str += '<tr>'
+                str +=    '<td style="cursor:pointer" onclick="getTips(this)">'
+                str +=        '<span>' + list[i].visitor_name + '</span>'
+                str +=        '<div class="hide">'
+                str +=            '<table>'
+                str +=                '<tr>'
+                str +=                    '<td class="td-item" style="width:60px">电话:</td>'
+                str +=                    '<td>' + list[i].identity_no.visit_phone + '</td>'
+                str +=                '</tr>'
+                str +=                '<tr>'
+                str +=                    '<td class="td-item">车牌号:</td>'
+                str +=                    '<td>' + list[i].identity_no.visit_cardno + '</td>'
+                str +=                '</tr>'
+                str +=                '<tr>'
+                str +=                    '<td class="td-item">证件号码:</td>'
+                str +=                    '<td>' + list[i].identity_no.visit_identify + '</td>'
+                str +=                '</tr>'
+                str +=                '<tr>'
+                str +=                    '<td class="td-item">其它信息:</td>'
+                str +=                    '<td>' + list[i].identity_no.visit_other + '</td>'
+                str +=                '</tr>'
+                str +=            '</table>'
+                str +=        '</div>'
+                str +=    '</td>'
+                str +=    '<td>' + list[i].schedule_date + '</td>'
+                str +=    '<td>' + list[i].schedule_time + '</td>'
+                str +=    '<td>' + list[i].company + '</td>'
+                str +=    '<td style="cursor:pointer" onclick="getTips(this)">'
+                str +=        '<span>' + list[i].user_name + '</span>'
+                str +=        '<div class="hide">'
+                str +=            '<table>'
+                str +=                '<tr>'
+                str +=                    '<td class=" td-item">部门:</td>'
+                str +=                    '<td>' + list[i].depart + '</td>'
+                str +=                '</tr>'
+                str +=                '<tr>'
+                str +=                    '<td class=" td-item">电话:</td>'
+                str +=                    '<td>' + list[i].contact_info.mobile + '</td>'
+                str +=                '</tr>'
+                str +=                '<tr>'
+                str +=                    '<td class=" td-item">邮箱:</td>'
+                str +=                    '<td>' + list[i].contact_info.mail + '</td>'
+                str +=                '</tr>'
+                str +=            '</table>'
+                str +=        '</div>'
+                str +=    '</td>'
+            if(list[i].approve_status != 1){
+                str +=    '<td>待确认</td>'
+                str +=    '<td class="pad0_10">'
+                str +=        '<input type="hidden" value="'+ list[i].data_seq +'"/>'
+                str +=        '<button class="layui-btn layui-btn-primary layui-btn-sm layui-bg-green" onclick="approveCustomer(this)">'
+                str +=        '点击确认'
+                str +=        '</button>'
+                str +=    '</td>'        
+            }else{
+                str +=    '<td>已确认</td>'
+                str +=    '<td class="pad0_10"></td>'
+            }
+                
+
+                str +=  '</tr>'
+                }
+            }else{
+                str += '<tr><td colspan="8" class="tc">未搜索到数据</td></tr>'
+            }
+            $("#tbody").removeClass('hide')
+            $("#tbody").html(str)
+        });
+    }
+
+    //点击显示登记人详细信息
+    function getTips(obj){
+        layer.tips($(obj).find('div:eq(0)').html(), $(obj), {
+          tips: [1, '#3595CC'],
+          area: ['300px','auto'],
+          shade: [0.1, '#393D49'],
+          shadeClose: true,
+          closeBtn: 2,
+          time: 60000
+        });
+    }
+
+    //验证是否已经登录及是否有权限
+    function approveCustomer(obj){
+        /*
+        var user_depart = $("#user_depart").val();   //登录用户所属部门
+        var data_seq = $(obj).prev().val();
+        if(user_depart != visit_depart){
+            layer.confirm('被访部门和你所在部门不一致，是否继续？', {
+                icon:3,
+                btn:['继续确认','操作取消']
+            }, function(){
+                approverOperation(obj,data_seq);
+            }, function(){
+                layer.msg('操作已取消')
+            });
+        }else{
+            approverOperation(obj,data_seq);
+        }
+        */
+        let today = get_today();
+        let schedule_date = $(obj).parent().prev().prev().prev().prev().prev().text().trim();
+        if(today != schedule_date){
+            layer.confirm('来访日期与今天日期不同，是否继续确认？', {
+                icon:3,
+                btn:['继续确认','操作取消']
+            }, function(){
+                var data_seq = $(obj).prev().val();
+                approverOperation(obj,data_seq);
+            }, function(){
+                layer.msg('操作已取消')
+            });
+        }else{
+            var data_seq = $(obj).prev().val();
+            approverOperation(obj,data_seq);
+        }
+    }
+
+    //确认操作
+    function approverOperation(obj,data_seq){
+        $.ajax({
+            url:'approveCustomer',
+            type:'get',
+            data:{data_seq:data_seq},
+            dataType:'json',
+            success:function(data){
+                if(data.result){
+                    layer.msg('确认成功')
+                    $(obj).parent().prev().text('已确认')
+                    $(obj).parent().text('已确认')
+                    $(obj).parent().prev().css({'color':'red'})
+                }else if(data.error == 1){
+                    layer.alert(data.msg,{title:'温馨提示',icon:6})
+                }else if(data.error == 2){
+                    layer.alert(data.msg,{title:'温馨提示',icon:7})
+                }
+            },
+            error:function(xmlHq,status,errorThrows){
+                alert(errorThrows)
+            }
+        })
+    }
+
+    </script>
+
+{% endblock %}

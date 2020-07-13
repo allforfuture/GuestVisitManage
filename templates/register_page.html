@@ -1,0 +1,169 @@
+<!doctype>
+{% load staticfiles %}
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	    <title>用户注册</title>
+	    <link rel="stylesheet" href="{% static 'layui/css/layui.css' %}">
+	  	<link rel="stylesheet" href="{% static 'css/common.css' %}">
+
+	  	<style type="text/css">
+		  .demo-class .layui-layer-title{background:#c00; color:#fff; border: none}
+		  .demo-class .layui-layer-btn{border-top:1px solid #E9E7E7}
+		  .demo-class .layui-layer-btn a{background:#333}
+		  .demo-class .layui-layer-btn .layui-layer-btn1{background:#999}
+		</style>
+	</head>
+	<body style="background-color: #F1F1F1;position: relative;">
+		<div id="wrap" class="layui-col-sm4 layui-col-sm-offset4 bgfff h500" style="width:427px">
+			<div class="layui-form">
+				<div style="padding-left:10px;margin-bottom: 15px" class="layui-bg-green h40 lh40">
+					用户注册
+				</div>
+				<div class="layui-form-item">
+				    <label class="layui-form-label">工&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;号：</label>
+				    <div class="layui-input-inline w250">
+				      <input type="text" id="user_id" required placeholder="请输入工号" autocomplete="off" class="layui-input" autofocus="autofocus" onkeyup="value=value.replace(/[^\d]/g,'')">
+				    </div>
+				    <div class="layui-form-mid cred">*</div>
+			  	</div>
+			  	<div class="layui-form-item">
+				    <label class="layui-form-label">姓&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;名：</label>
+				    <div class="layui-input-inline w250">
+				      <input type="text" id="user_name" required placeholder="请输入姓名" autocomplete="off" class="layui-input" onkeyup="value=value.replace(/[\d]/g,'')">
+				    </div>
+				    <div class="layui-form-mid cred">*</div>
+			  	</div>
+			  	<div class="layui-form-item">
+				    <label class="layui-form-label">密&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;码：</label>
+				    <div class="layui-input-inline w250">
+				      <input type="password" id="password" required placeholder="请输入密码" class="layui-input">
+				    </div>
+				    <div class="layui-form-mid cred">*</div>
+			  	</div>
+			  	<div class="layui-form-item">
+				    <label class="layui-form-label">确认密码：</label>
+				    <div class="layui-input-inline w250">
+				      <input type="password" id="re_password" required placeholder="请确认密码" class="layui-input">
+				    </div>
+				    <div class="layui-form-mid cred">*</div>
+			  	</div>
+			  	<div class="layui-form-item">
+				    <label class="layui-form-label" required>电话号码：</label>
+				    <div class="layui-input-inline w250">
+				      <input type="text" id="phone" placeholder="请输入电话号码" autocomplete="off" class="layui-input" onkeyup="value=value.replace(/[^\d]/g,'')">
+				    </div>
+				    <div class="layui-form-mid cred">*</div>
+			  	</div>
+			  	<div class="layui-form-item">
+				    <label class="layui-form-label">选择部门：</label>
+				    <div class="layui-input-inline w250">
+				      	<select id="depart" lay-search>
+						  	<option value="">请选择部门</option>
+						  	<option>信息系统部</option>
+						  	<option>生产管理部</option>
+							<option>治具课</option>
+							<option>制品品证部</option>
+							<option>部品品证部</option>
+						  	<option>产品技术部</option>
+							<option>营业部</option>
+						  	<option>生产技术部</option>
+						  	<option>部品技术部</option>
+							<option>设施课</option>
+							<option>部品技术部</option>
+						  	<option>Education Training</option>
+						  	<option>制造部</option>
+						  	<option>采购部</option>
+						  	<option>设备购买部</option>
+						  	<option>IE推进部</option>
+						  	<option>开发部</option>
+						  	<option>财务部</option>
+						  	<option>总务部</option>
+						  	<option>人事部</option>
+                                                        <option>VC事业部</option>
+						  	<option>西科姆</option>
+						  	<option>其它部门</option>
+						</select>
+				    </div>
+				    <div class="layui-form-mid cred">*</div>
+			  	</div>
+			  	<div class="layui-form-item">
+				    <label class="layui-form-label">邮箱地址：</label>
+				    <div class="layui-input-inline w250">
+				      <input type="text" id="email" placeholder="请输入邮箱地址" autocomplete="off" class="layui-input">
+				    </div>
+			  	</div>
+			  	<div class="layui-form-item" style="margin-right: 65px">
+				    <div class="layui-input-block">
+				      	<button class="layui-btn layui-col-sm5" onclick="user_register()">点击注册</button>
+				      	<a class="layui-btn layui-col-sm5 layui-btn-primary" href="/login_page">前往登录</a>
+				    </div>
+				 </div>
+			</div>
+		</div>
+	</body>
+</html>
+
+<script type="text/javascript" src="{% static 'layui/layui.js' %}"></script>
+
+<script type="text/javascript">
+	var $ = '';
+	layui.use(['form','jquery'],function(){
+		$ = layui.jquery;
+		var height = $("#wrap").height()
+		var body_height = $("body").height()
+		var top = (body_height - height) / 2;
+		if(top > 200){
+			top -= 100;
+		}
+		$("#wrap").css("top",top);
+
+		$('input').focus(function(){
+			$("#msg").text('')
+		});
+	});
+
+	function user_register(){
+		var user_id = $("#user_id").val();
+		var user_name = $("#user_name").val();
+		var password = $("#password").val();
+		var re_password = $("#re_password").val();
+		var phone = $("#phone").val();
+		var depart = $("#depart").val();
+		var email = $("#email").val();
+		if(user_id == '' || user_name == '' || password == '' || re_password == '' || phone == '' || depart == ''){
+			layer.alert('必填项不能为空！',{title:'温馨提示',icon:7})
+			return;
+		}else if(password != re_password){
+			layer.alert('两次密码输入不一致！',{title:'温馨提示',icon:7})
+			return;
+		}else if(user_id.length != 5 && user_id.length != 11){
+			layer.alert('工号只能是5位或11位数！',{title:'温馨提示',icon:7})
+			return;
+		}else if(password.length < 6){
+			layer.alert('密码必须在6位或6位以上！',{title:'温馨提示',icon:7})
+			return
+		}
+
+		var data = {user_id:user_id,user_name:user_name,password:password,re_password:re_password,
+			phone:phone,depart:depart,email:email, csrfmiddlewaretoken:'{{ csrf_token }}'}
+		$.ajax({
+			url:'/user_register',
+			type:'post',
+			data:data,
+			dataType:'json',
+			success:function(data){
+				if(data.result){
+					layer.msg('注册成功',{title:'提示',icon:1})
+				}else{
+					layer.msg(data.msg,{title:'温馨提示',icon:5})
+				}
+			},
+			error:function(xmlHq,status,errorThrows){
+				alert('出现异常！')
+			}
+		});
+	}
+
+</script>

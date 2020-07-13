@@ -1,0 +1,264 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% block content %}
+
+<div class="layui-form layui-col-md-offset2" style="margin-top:10px">
+  <div class="layui-form-item">
+    <div class="layui-inline">
+      <label class="layui-form-label">起始日期:</label>
+      <div class="layui-input-inline">
+        <input type="text" class="layui-input" id="begindatetime"/>
+      </div>
+    </div>
+    <div class="layui-inline">
+      <label class="layui-form-label">结束日期:</label>
+      <div class="layui-input-inline">
+        <input type="text" class="layui-input" id="enddatetime"/>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="layui-form layui-col-md-offset2">
+  <div class="layui-form-item">
+    <div class="layui-inline">
+      <label class="layui-form-label">访客姓名:</label>
+      <div class="layui-input-inline">
+        <input id="visitor_name" autocomplete="off" class="layui-input" placeholder="请输入访客姓名">
+      </div>
+    </div>
+    <div class="layui-inline">
+      <label class="layui-form-label">访问状态:</label>
+      <div class="layui-input-block" style="width:250px">
+        <select name="city" xm-select="selectId">
+          <option value="ongoing" selected="selected">正在访问</option>
+          <option value="finished" selected="selected">访问结束</option>
+        </select>
+      </div>
+    </div>
+    <div class="layui-inline h60 lh60" style="margin-top: -5px">
+      <button class="layui-btn layui-btn-primary layui-bg-green" onclick="record_search()">
+        点击查询
+      </button>
+    </div>
+  </div>
+</div>
+
+<table class="layui-table hide" lay-even>
+  <thead>
+    <tr>
+      <th>访客姓名</th>
+      <th>所属单位(公司)</th>
+      <th>进厂位置</th>
+      <th>出厂位置</th>
+      <th>访问状态</th>
+      <th>访问时间</th>
+      <th>出厂时间</th>
+      <th>访问时长</th>
+      <th>被访部门</th>
+      <th>登记人</th>
+      <th>(入 / 出)</th>
+    </tr>
+  </thead>
+  <tbody id="tbody">
+    <tr>
+      <td style="cursor:pointer" onclick="getTips(this)">
+        <span>张三</span>
+        <div class="hide">
+          <table>
+            <tr>
+              <td class="w50 td-item">电话:</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td class="w50 td-item">车牌:</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td class="w50 td-item">证件号:</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td class="w50 td-item">其它信息:</td>
+              <td></td>
+            </tr>
+          </table>
+        </div>
+      </td>
+      <td>xxx-xx-x</td>
+      <td>信息系统部</td>
+      <td>一号大门</td>
+      <td>二号大门</td>
+      <td>访问中</td>
+      <td>2018-08-23 14:55:21</td>
+      <td>2018-08-23 15:55:21</td>
+      <td class="bgred cfff">3小时42分</td>
+      <th>张三</th>
+      <td>小二</td>
+    </tr>
+  </tbody>
+</table>
+
+<script type="text/javascript" src="{% static 'js/formSelects-v4.js' %}"></script>
+
+<script type="text/javascript">
+
+  function get_visit_status(){
+    var visit_status = [];
+    $('.xm-select-label > span').each(function(){
+      value = $(this).attr('value')
+      visit_status.push(value)
+    });
+    return visit_status;
+  }
+
+  function record_search(){
+    var visitor_name = $('#visitor_name').val().trim();
+    var begindatetime = $("#begindatetime").val().trim();
+    var enddatetime = $("#enddatetime").val();
+    if(enddatetime != ''){
+      enddatetime += ' 23:59:59'
+    }
+    visit_status = get_visit_status();
+    data = {
+      begindatetime:begindatetime,enddatetime:enddatetime,
+      visitor_name:visitor_name,visit_status:JSON.stringify(visit_status)
+    };
+    $.ajax({
+      url:'record_search',
+      type:'get',
+      data:data,
+      dataType:'json',
+      async: true,
+      success:function(data){
+        if(data.result){
+          datalist = data.datalist
+          str = ''
+          if(datalist.length > 0){
+            for(var i=0;i<datalist.length;i++){
+              str += '<tr>'
+              str +=    '<td style="cursor:pointer" onclick="getTips(this)">'
+              str +=      '<span>' + datalist[i].visitor_name + '</span>'
+                          identity_no = datalist[i].identity_no
+              str +=      '<div class="hide">'
+              str +=        '<table>'
+              str +=          '<tr>'
+              str +=            '<td class="w50 td-item">电话:</td>'
+              str +=            '<td>' + identity_no.visit_phone + '</td>'
+              str +=          '</tr>'
+              str +=          '<tr>'
+              str +=            '<td class="w50 td-item">车牌:</td>'
+              str +=            '<td>' + identity_no.visit_cardno + '</td>'
+              str +=          '</tr>'
+              str +=          '<tr>'
+              str +=            '<td class="w50 td-item">证件号:</td>'
+              str +=            '<td>' + identity_no.visit_identify + '</td>'
+              str +=          '</tr>'
+              str +=          '<tr>'
+              str +=            '<td class="w50 td-item">其它:</td>'
+              str +=            '<td>' + identity_no.visit_other + '</td>'
+              str +=          '</tr>'
+              str +=        '</table>'
+              str +=      '</div>'
+              str +=    '</td>'
+              str +=    '<td>' + datalist[i].visit_comapny + '</td>'
+              str +=    '<td>' + datalist[i].place_name + '</td>'
+
+              str +=    '<td>'
+                  if(datalist[i].place_name_out == null || datalist[i].place_name_out == ''){ //访问中
+              str +=    ''
+                  }else{    //访问结束
+              str +=    datalist[i].place_name_out
+                  }
+              str +=    '</td>'
+
+              str +=    '<td style="cursor:pointer" onclick="getTips(this)">'
+                  if(datalist[i].data_seq_out == null || datalist[i].data_seq_out == ''){
+              str +=      '访问中'  
+                  }else{
+              str +=      '访问结束'
+                  }
+              str +=      '<div class="hide">'
+              str +=        '<table>'
+              str +=          '<tr>'
+              str +=            '<td class="td-item">临时厂牌:</td>'
+              str +=            '<td>' + datalist[i].temporary_card + '</td>'
+              str +=          '</tr>'
+              str +=        '</table>'
+              str +=      '</div>'
+              str +=    '</td>'
+
+              str +=    '<td>' + datalist[i].update_at + '</td>'
+                  if(datalist[i].update_at_out == null || datalist[i].update_at_out == '' || datalist[i].update_at_out == 'None'){
+              str +=    '<td></td>'
+                  }else{
+              str +=    '<td>' + datalist[i].update_at_out + '</td>'
+                  }
+                  
+                  if(datalist[i].is_over_time){
+              str += '<td class="bgred cfff">'
+                  }else{
+              str += '<td>'
+                  }
+              str +=  datalist[i].visit_duration + '</td>'
+
+              str += '<td>' + datalist[i].user_depart_apply + '</td>'
+              str += '<td onclick="getTips(this)" style="cursor:pointer">'
+              str +=  '<span>' + datalist[i].user_name_apply + '</span>'
+              str +=    '<div class="hide">'
+              str +=      '<table>'
+              str +=          '<tr>'
+              str +=            '<td class="w50 td-item">用户名:</td>'
+              str +=            '<td>' + datalist[i].user_name_apply + '</td>'
+              str +=          '</tr>'
+              str +=          '<tr>'
+              str +=            '<td class="w50 td-item">部门:</td>'
+              str +=            '<td>' + datalist[i].user_depart_apply + '</td>'
+              str +=          '</tr>'
+              str +=          '<tr>'
+              str +=            '<td class="w50 td-item">电话:</td>'
+              str +=            '<td>' + datalist[i].user_contact_info_apply.mobile + '</td>'
+              str +=          '</tr>'
+              str +=          '<tr>'
+              str +=            '<td class="w50 td-item">邮箱:</td>'
+              str +=            '<td>' + datalist[i].user_contact_info_apply.mail + '</td>'
+              str +=          '</tr>'
+              str +=      '</table>'
+              str +=  '</div>'
+              str += '</td>'
+              str += '<td>'
+              str +=  datalist[i].user_name
+                  if(datalist[i].user_name_out != null && datalist[i].user_name_out != ''){
+              str +=  '&nbsp;/&nbsp;' + datalist[i].user_name_out
+                  }
+              str += '</td>'
+              str += '</tr>'
+            }
+          }else{
+            str += '<tr><td colspan="11" class="tc">未搜索到数据</td></tr>'
+          }
+          $(".layui-table").removeClass('hide')
+          $("#tbody").html(str)
+        }
+      },
+      error:function(xmlHq,status,errorThrows){
+        alert(errorThrows)
+      }
+    });
+  }
+
+  //点击显示登记人详细信息
+  function getTips(obj){
+    layer.tips($(obj).find('div:eq(0)').html(), $(obj), {
+      tips: [1, '#3595CC'],
+      area: ['300px', 'auto'],
+      shade: [0.1, '#393D49'],
+      closeBtn: 2,
+      shadeClose: true,
+      time: 60000
+    });
+  }
+
+</script>
+
+{% endblock %}

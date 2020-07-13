@@ -1,0 +1,499 @@
+# -*- coding:utf-8 -*-
+from django.db import connections
+import datetime
+
+#预约数据查询
+def appointsearch():
+	result = []
+	today = datetime.datetime.now().strftime('%Y-%m-%d')
+	try:
+		cur = connections['GuestVisitManage'].cursor()
+		sql = 'select * from( \
+				select tva.data_seq,tva.visitor,tva.identity_no,tva.schedule_date,tva.schedule_time,tva.company,\
+				tva.approve_status,u.user_name,u.depart,u.contact_info,tva.approver_id \
+				from t_visit_apply tva,m_user u where tva.schedule_date = \'{0}\' and tva.data_seq not in \
+				(select distinct(data_seq) from t_visit_record) and tva.employee_id = u.user_id) as a \
+				left join \
+				(select user_id,user_name from m_user) as b on a.approver_id = b.user_id \
+				order by a.approver_id asc, a.schedule_date asc, a.schedule_time asc'.format(today)
+		cur.execute(sql)
+		rows = cur.fetchall()
+		for row in rows:
+			tmpdict = {
+				'data_seq':row[0],'visitor_name':row[1],'identity_no':row[2],'schedule_date':str(row[3]),
+				'schedule_time':str(row[4]),'company':row[5],'approve_status':row[6],
+				'user_name':row[7],'depart':row[8],'contact_info':row[9],'approve_name':row[12]
+			}
+			result.append(tmpdict)
+	except Exception as e:
+		print(e)
+	finally:
+		connections['GuestVisitManage'].close()
+	return result
+
+#查询待确认的访客数据
+def visit_to_confirm():
+	result = []
+	today = datetime.date.today()
+	try:
+		cur = connections['GuestVisitManage'].cursor()
+		sql = 'select tva.data_seq,tva.visitor,tva.identity_no,tva.schedule_date,tva.schedule_time,tva.company, \
+				tva.approve_status,u.user_name,u.depart,u.contact_info from t_visit_apply tva,m_user u \
+				where tva.employee_id = u.user_id and tva.approve_status is null and tva.schedule_date >= \'{0}\' \
+				order by tva.employee_id'.format(today)
+		cur.execute(sql)
+		rows = cur.fetchall()
+
+		for row in rows:
+			tmpdict = {
+				'data_seq':row[0],'visitor_name':row[1],'identity_no':row[2],'schedule_date':str(row[3]),
+				'schedule_time':str(row[4]),'company':row[5],'approve_status':row[6],'user_name':row[7],
+				'depart':row[8],'contact_info':row[9]
+			}
+			result.append(tmpdict)
+	except Exception as e:
+		print(e)
+	cur.close()
+	return result
+
+#用户登录
+'''
+def login(request,usernum,password):
+	now = datetime.datetime.now()
+	#tomorrow_delta = datetime.timedelta(days=1)
+	#tomorrow = now + tomorrow_delta
+	#request.session.set_expiry(0)	#关闭浏览器session缓存失效
+	request.session.set_expiry(3600)
+	try:
+		cur = connections['GuestVisitManage'].cursor()
+		sql = 'select user_id,user_name,role_text,pass_word from m_user where user_id = \'{0}\' \
+			and pass_word = \'{1}\''.format(usernum,password)
+		cur.execute(sql)
+		row = cur.fetchone()
+		if not row:
+			result = {'result':False,'msg':'工号或密码错误！'}
+		else:
+			user_id,user_name,role_text,pass_word = row
+			request.session['user_id'] = user_id
+			request.session['user_name'] = user_name
+			request.session['role_text'] = role_text
+			request.session['pass_word'] = pass_word
+			result = {'result':True,'user_id':user_id,'role_text':role_text,'user_name':user_name}
+	except Exception as e:
+		print(e)
+	cur.close()
+	return result
+'''
+
+#登录操作
+def login(request,user_id,password,keep_login):
+	if keep_login:
+		week_delta = datetime.timedelta(days=7)
+		request.session.set_expiry(week_delta)
+	else:
+		request.session.set_expiry(3600)
+	try:
+		cur = connections['GuestVisitManage'].cursor()
+		sql = 'select user_id,user_name,depart,role_text,pass_word from m_user where user_id = \'{0}\' \
+				and pass_word = \'{1}\''.format(user_id,password)
+
+		cur.execute(sql)
+		row = cur.fetchone()
+		if not row:
+			data = {'result':False,'error':1}
+		else:
+			user_id,user_name,user_depart,role_text,pass_word = row
+			request.session['user_id'] = user_id
+			request.session['user_name'] = user_name
+			request.session['user_depart'] = user_depart
+			request.session['role_text'] = role_text
+			data = {'result':True,'role_text':role_text}
+	except Exception as e:
+		data = {'result':False,'error':2}
+		print(e)
+	cur.close()
+	return data
+
+#确认客户
+def approveCustomer(data_seq,user_id):
+	now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+	data = {'result':False}
+	try:
+		sql = 'update t_visit_apply set approve_status = \'{0}\',approver_id = \'{1}\', \
+				approve_at = \'{2}\' where data_seq = \'{3}\''.format('1',user_id,now,data_seq)
+		cur = connections['GuestVisitManage'].cursor()
+		rows = cur.execute(sql)
+		data['result'] = True
+	except Exception as e:
+		print(e)
+	cur.close()
+	return data
+
+#获取进出门禁位置
+def get_in_out_place():
+	result = []
+	try:
+		sql = 'select place_cd,place_name from m_place'
+		cur = connections['GuestVisitManage'].cursor()
+		cur.execute(sql)
+		rows = cur.fetchall()
+		for row in rows:
+			result.append({'place_cd':row[0],'place_name':row[1]})
+	except Exception as e:
+		print(e)
+	cur.close()
+	return result
+
+#发放临时厂牌
+def release_tempcard(temp_card,user_id,data_seq,place_cd):
+	update_at = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+	data = {'result':False}
+	try:
+		sql = 'insert into t_visit_record(data_seq,update_at,temporary_card,place_cd,action_cd,employee_id) values \
+			(\'{0}\',\'{1}\',\'{2}\',\'{3}\',\'{4}\',\'{5}\')'.format(data_seq,update_at,temp_card,place_cd,'IN',user_id)
+		#with open('C:\\Users\\admin\\Desktop\\hehe.txt',w) as fp:
+		#	fp.write(sql)
+		cur = connections['GuestVisitManage'].cursor()
+		cur.execute(sql)
+		data['result'] = True
+
+	except Exception as e:
+		data['msg'] = '出现异常'
+		data['error'] = 2
+		print(e)
+	cur.close()
+	return data
+
+#厂牌回收前查询
+def recycle_search(cardnolist):
+	result = []
+	sql = 'select record.data_seq,record.temporary_card,tva.visitor,m_place.place_name,record.update_at,m_user.user_name, \
+			record.employee_id_out,record.update_at_out from view_record_in_out as record,t_visit_apply as tva,m_place,m_user \
+			where record.data_seq = tva.data_seq and record.place_cd = m_place.place_cd and record.employee_id = m_user.user_id \
+			and record.data_seq_out is null and record.temporary_card in ('
+	tmpstr = ''
+	for index,cardno in enumerate(cardnolist):
+		if index < len(cardnolist) - 1:
+			tmpstr += '\'{0}\','.format(cardno)
+		else:
+			tmpstr += '\'{0}\''.format(cardno)
+	tmpstr += ')'
+	sql += tmpstr
+
+	try:
+		cur = connections['GuestVisitManage'].cursor()
+		cur.execute(sql)
+		rows = cur.fetchall()
+		for row in rows:
+			if not row[6]:
+				employee_id_out = ''
+			else:
+				employee_id_out = row[6]
+
+			if not row[7]:
+				update_at_out = datetime.datetime.now()
+			else:
+				update_at_out = row[7]
+			update_at_in = row[4]
+
+			visit_duration,is_over_time = get_duration_isovertime(update_at_in,update_at_out)
+
+			tmpdict = {
+				'data_seq':row[0],'temporary_card':row[1],'visit_name':row[2],'place_name':row[3],
+				'visit_duration':visit_duration,'update_at':str(row[4]),'user_name':row[5],
+				'employee_id_out':employee_id_out,'update_at_out':str(update_at_out),'is_over_time':is_over_time
+			}
+			result.append(tmpdict)
+	except Exception as e:
+		print(e)
+	cur.close()
+	return result
+
+def get_duration_isovertime(update_at_in,update_at_out):
+	if isinstance(update_at_out,str):
+		update_at_out = datetime.datetime.strptime(update_at_out,'%Y-%m-%d %H:%M:%S')
+	visit_duration = str(update_at_out - update_at_in)
+
+	if 'day' in visit_duration:
+		duration_list = visit_duration.split(', ')
+		times_duration = duration_list[1].split(':')
+		day = duration_list[0].replace('days','').replace('day','').strip()
+		hour = times_duration[0]
+		minute = times_duration[1]
+		visit_duration = day + '天' + hour + '小时' + minute + '分'
+		is_over_time = True
+		return (visit_duration,is_over_time)
+	else:
+		duration_list = visit_duration.split(':')
+		visit_duration = duration_list[0] + '时' + duration_list[1] + '分'
+		if int(duration_list[0]) > 8:
+			is_over_time = True
+		else:
+			is_over_time = False
+		return (visit_duration,is_over_time)
+
+#回收选中厂牌
+def recycle_all(user_id,out_place,data_seq_cardno_list):
+	update_at = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+	cur = connections['GuestVisitManage'].cursor()
+	data = {'result':False}
+	try:
+		values = []
+		for item in data_seq_cardno_list:
+			data_seq,cardno = item['data_seq'],item['cardno']
+			value = (int(data_seq),update_at,cardno,out_place,'OUT',user_id)
+
+			#验证该厂牌是否已归还
+			gSQL = 'select count(data_seq) from t_visit_record where data_seq = \'{0}\' and \
+						action_cd = \'OUT\''.format(data_seq)
+			cur.execute(gSQL)
+			count = cur.fetchone()[0]
+			if count == 0:
+				values.append(value)
+
+		sql = 'insert into t_visit_record (data_seq,update_at,temporary_card,place_cd,action_cd,employee_id) \
+				values(%s,%s,%s,%s,%s,%s)'
+		cur.executemany(sql,values)
+		connections['GuestVisitManage'].commit
+		data['result'] = True
+	except Exception as e:
+		print(e)
+	cur.close()
+	return data
+
+#访客记录查询
+def record_search(visitor_name,begindatetime,enddatetime,visit_status):
+	result = []
+	sql = 'select * from( \
+			select tvr.data_seq,tva.visitor,tva.company,tva.identity_no,tva.employee_id,tvr.temporary_card, \
+			m_place.place_name,m_user.user_name,tvr.update_at from t_visit_record as tvr,t_visit_apply as tva, \
+			m_place,m_user \
+			where tvr.action_cd = \'IN\' and tvr.data_seq = tva.data_seq and tvr.data_seq = tva.data_seq and \
+			m_place.place_cd = tvr.place_cd and tvr.employee_id = m_user.user_id and tvr.update_at >= \'{0}\' \
+			and tvr.update_at <= \'{1}\' '.format(begindatetime,enddatetime)
+	if visitor_name:
+		sql += ' and tva.visitor = \'{0}\''.format(visitor_name)
+	sql +=	'order by tva.schedule_date desc, tva.schedule_time desc) as tvr_in \
+			left join ( \
+			select tvr.data_seq,m_place.place_name place_name_out,tvr.update_at update_at_out, \
+			m_user.user_name user_name_out from t_visit_record tvr,m_place,m_user \
+			where tvr.action_cd = \'OUT\' and tvr.update_at >= \'{0}\' and tvr.update_at <= \'{1}\' \
+			and tvr.place_cd = m_place.place_cd and tvr.employee_id = m_user.user_id \
+			) as tvr_out \
+			on tvr_in.data_seq = tvr_out.data_seq order by tvr_in.update_at desc'.format(begindatetime,enddatetime)
+
+	try:
+		cur = connections['GuestVisitManage'].cursor()
+		cur.execute(sql)
+		rows = cur.fetchall()
+		for row in rows:
+			update_at_in,update_at_out = row[8],row[11]
+			if not update_at_out:
+				update_at_out = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+			visit_duration,is_over_time = get_duration_isovertime(update_at_in,update_at_out)
+			data_seq_out = row[9]
+			if (data_seq_out and 'finished' in visit_status) or (not data_seq_out and 'ongoing' in visit_status):
+				employee_id = row[4]
+				sql = 'select user_name,depart,contact_info from m_user where user_id = \'{0}\''.format(employee_id)
+				cur.execute(sql)
+				user = cur.fetchone()
+				user_name_apply,user_depart_apply,user_contact_info_apply = user
+				tmpdict = {
+					'data_seq':row[0],'visitor_name':row[1],'identity_no':row[3],'temporary_card':row[5],
+					'place_name':row[6],'user_name':row[7],'update_at':str(row[8]),'data_seq_out':row[9],
+					'place_name_out':row[10],'update_at_out':str(row[11]),'user_name_out':row[12],
+					'visit_duration':visit_duration,'is_over_time':is_over_time,'visit_comapny':row[2],
+					'user_name_apply':user_name_apply,'user_depart_apply':user_depart_apply,
+					'user_contact_info_apply':user_contact_info_apply
+				}
+				result.append(tmpdict)
+	except Exception as e:
+		print(e)
+	cur.close()
+	return result
+
+#客户注册操作
+def visit_register(schedule_date,schedule_time,visit_name_str,visit_company,identity_no,employee_id,single_multiply):
+	update_at = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+	try:
+		data = {'result':False,'num':0}
+		cur = connections['GuestVisitManage'].cursor()
+		if single_multiply == 'multiply':
+			visit_name_list = visit_name_str.split(',')
+			for visit_name in visit_name_list:
+				sql = 'insert into t_visit_apply(update_at,schedule_date,schedule_time,company,visitor,identity_no, \
+					employee_id) values(\'{0}\',\'{1}\',\'{2}\',\'{3}\',\'{4}\',\'{5}\',\'{6}\')'.format(update_at,
+						schedule_date,schedule_time,visit_company,visit_name,identity_no,employee_id)
+				cur.execute(sql)
+				data['result'] = True
+				data['num'] += 1
+		else:
+			visit_name = visit_name_str
+			sql = 'insert into t_visit_apply(update_at,schedule_date,schedule_time,company,visitor,identity_no, \
+					employee_id) values(\'{0}\',\'{1}\',\'{2}\',\'{3}\',\'{4}\',\'{5}\',\'{6}\')'.format(update_at,
+						schedule_date,schedule_time,visit_company,visit_name,identity_no,employee_id)
+			cur.execute(sql)
+			data['result'] = True
+			data['num'] += 1
+	except Exception as e:
+		data['msg'] = '发生异常!'
+		print(e)
+	finally:
+		connections['GuestVisitManage'].close()
+	return data
+
+#用户注册
+def user_register(user_id,user_name,password,phone,depart,email):
+	sql = 'select count(user_id) from m_user where user_id = \'{0}\''.format(user_id)
+	data = {'result':False}
+	try:
+		cur = connections['GuestVisitManage'].cursor()
+		cur.execute(sql)
+		count = cur.fetchone()[0];
+		if count == 0:
+			contact_info = str({"mail":email,"mobile":phone}).replace('\'','\"')
+			role_text = 'User'
+			sql = 'insert into m_user(user_id,user_name,depart,contact_info,role_text,pass_word) \
+					values(\'{0}\',\'{1}\',\'{2}\',\'{3}\',\'{4}\',\'{5}\')'.format(user_id,user_name,
+						depart,contact_info,role_text,password)
+			cur.execute(sql)
+			data['result'] = True
+		else:
+			data['msg'] = r'工号:{0}已经注册，不能重复注册！'.format(user_id)
+	except Exception as e:
+		print(e)
+	return data
+
+#修改密码
+def update_passwd(user_id,oldpasswd,newpasswd):
+	sql = 'select pass_word from m_user where user_id = \'{0}\' limit 1'.format(user_id)
+	data = {'result':False}
+	try:
+		cur = connections['GuestVisitManage'].cursor()
+		cur.execute(sql)
+		row = cur.fetchone()
+		if row and row[0] == oldpasswd:
+			sql = 'update m_user set pass_word = \'{0}\' where user_id = \'{1}\''.format(newpasswd,user_id)
+			cur.execute(sql)
+			data['result'] = True
+		else:
+			data['msg'] = '原密码错误!'
+	except Exception as e:
+		cur.close()
+		print(e)
+	return data
+
+#个人预约数据查询
+def get_appoint_data(user_id,begindate,enddate):
+	data = []
+	sql = 'select data_seq, schedule_date, schedule_time, company, visitor, identity_no, approve_status from \
+		t_visit_apply tva where employee_id = \'{0}\' and schedule_date >= \'{1}\' and schedule_date <= \'{2}\' \
+		and tva.data_seq not in (select distinct(data_seq) from t_visit_record)'.format(user_id,begindate,enddate)
+	try:
+		cur = connections['GuestVisitManage'].cursor()
+		cur.execute(sql)
+		rows = cur.fetchall()
+		for index,row in enumerate(rows):
+			data_seq,schedule_date,schedule_time,company,visitor,identity_no,approve_status = row
+			if approve_status:
+				is_approver = '已审批'
+			else:
+				is_approver = '审批中'
+			tmpdict = {
+				'index': index + 1, 'data_seq':data_seq, 'visit_name': visitor, 'visit_date': str(schedule_date),
+				'visit_time': str(schedule_time), 'visit_company': company,'visit_phone': identity_no['visit_phone'], 
+				'visit_identify': identity_no['visit_identify'], 'visit_cardno': identity_no['visit_cardno'],
+				'visit_reason': identity_no['visit_other'], 'is_approver': is_approver
+			}
+			data.append(tmpdict)
+	except Exception as e:
+		print(e)
+	finally:
+		connections['GuestVisitManage'].close()
+	return data
+
+#删除个人预约
+def del_per_appoint(data_seq):
+	sql = 'delete from t_visit_apply where data_seq = \'{0}\''.format(data_seq)
+	result = False
+	try:
+		cur = connections['GuestVisitManage'].cursor()
+		cur.execute(sql)
+		result = True
+	except Exception as e:
+		print(e)
+	finally:
+		connections['GuestVisitManage'].close()
+	return result
+
+#更新个人预约
+def update_per_appoint(data_seq,is_approver,visit_name,schedule_date,
+		schedule_time,visit_phone,visit_company,visit_identify,visit_cardno,visit_reason):
+	result = False
+	identity_no = {
+		"visit_phone":visit_phone,"visit_cardno":visit_cardno,
+		"visit_identify":visit_identify,"visit_other":visit_reason
+	}
+	identity_no = str(identity_no).replace('\'','\"')
+	if is_approver == '已审批':
+		sql = 'update t_visit_apply set schedule_date = \'{0}\', schedule_time = \'{1}\', \
+			company = \'{2}\', visitor = \'{3}\', identity_no = \'{4}\',approve_status = null, \
+			approver_id = null, approve_at = null where data_seq = \'{5}\''.format(schedule_date,
+			schedule_time,visit_company,visit_name,identity_no,data_seq)
+	else:
+		sql = 'update t_visit_apply set schedule_date = \'{0}\', schedule_time = \'{1}\', \
+			company = \'{2}\', visitor = \'{3}\', identity_no = \'{4}\' where data_seq = \'{5}\' \
+			'.format(schedule_date,schedule_time,visit_company,visit_name,identity_no,data_seq)
+
+	try:
+		cur = connections['GuestVisitManage'].cursor()
+		cur.execute(sql)
+		result = True
+	except Exception as e:
+		print(e)
+	finally:
+		connections['GuestVisitManage'].close()
+	return result
+
+def get_confirm_data(begintime, endtime):
+	data = []
+	sql = 'select tva.visitor,tva.schedule_date,tva.schedule_time,tva.approve_at,tva.company,u.depart, \
+		u.user_name from t_visit_apply tva,m_user u where tva.employee_id = u.user_id and tva.approve_status \
+		is not null and approve_at >= \'{0}\' and approve_at <= \'{1}\' and tva.data_seq not in \
+		(select distinct(data_seq) from t_visit_record)'.format(begintime, endtime)
+	try:
+		cur = connections['GuestVisitManage'].cursor()
+		cur.execute(sql)
+		rows = cur.fetchall()
+		for index,row in enumerate(rows):
+			visit_name,schedule_date,schedule_time,approve_time,visit_company,visit_depart,register_name = row
+			tmpdict = {
+				'index':index + 1,'visit_name':visit_name,'schedule_date':str(schedule_date),'visit_company':visit_company,
+				'schedule_time':str(schedule_time),'approve_time':str(approve_time),'visit_depart':visit_depart,
+				'register_name':register_name
+			}
+			data.append(tmpdict)
+	except Exception as e:
+		print(e)
+	finally:
+		connections['GuestVisitManage'].close()
+	return data
+
+def register_from_excel(visit_data):
+	data = {'result':False}
+	now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+	for visit in visit_data:
+		visit.insert(0,now)
+	try:
+		sql = 'insert into t_visit_apply(update_at,schedule_date,schedule_time,company,visitor, \
+			identity_no,employee_id) values(%s, %s, %s, %s, %s, %s, %s)'
+		cur = connections['GuestVisitManage'].cursor()
+		cur.executemany(sql,visit_data)
+		data['result'] = True
+		data['num'] = len(visit_data)
+	except Exception as e:
+		print(e)
+		data['msg'] = '出现异常！'
+	finally:
+		connections['GuestVisitManage'].close()
+	return data

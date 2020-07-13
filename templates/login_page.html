@@ -1,0 +1,77 @@
+{% load staticfiles %}
+<!doctype>
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	    <title>用户登录</title>
+	    <link rel="stylesheet" href="{% static 'layui/css/layui.css' %}">
+	  	<link rel="stylesheet" href="{% static 'css/common.css' %}">
+	</head>
+	<body style="background-color: #F1F1F1;position: relative;">
+		<div id="wrap" class="layui-col-sm4 layui-col-sm-offset4" style="height:300px;width:427px;background-color: #fff">
+			<form class="layui-form" action="login" method="POST">
+				<div style="height:40px;line-height: 40px;padding-left:10px;margin-bottom: 15px" class="layui-bg-green">
+					用户登录
+				</div>
+				<div class="layui-form-item">
+				    <label class="layui-form-label">工号：</label>
+				    <div class="layui-input-inline" style="width:250px">
+				      <input type="text" name="user_id" required lay-verify="required" placeholder="请输入工号" autocomplete="off" class="layui-input" autofocus="autofocus">
+				    </div>
+				    <div class="layui-form-mid cred">*</div>
+			  	</div>
+			  	<div class="layui-form-item">
+				    <label class="layui-form-label">密码：</label>
+				    <div class="layui-input-inline" style="width:250px">
+				      <input type="password" name="password" required lay-verify="required" placeholder="请输入密码" autocomplete="off" class="layui-input">
+				    </div>
+				    <div class="layui-form-mid cred">*</div>
+			  	</div>
+			  	<div class="layui-form-item">
+			  		<label class="layui-form-label layui-col-sm-offset3">保持登录7天</label>
+			  		<div class="layui-input-block">
+				      <input type="checkbox" value="keep_login" lay-skin="primary" name="keep_login">
+				    </div>
+			  	</div>
+			  	<div class="layui-form-item" style="margin-left: 50px">
+				    <div class="layui-input-block">
+				    	{% csrf_token %}
+				      	<button class="layui-btn" lay-filter="demo1">点击登录</button>
+				      	<a class="layui-btn layui-btn-primary" href="/register_page">前往注册</a>
+				    </div>
+				    {% ifequal error 1 %}
+				    <div style="margin-top:10px" id="msg">
+				    	<span class="cred" style="margin-left: 100px">用户名或密码错误</span>
+				    </div>
+				    {% else %}
+					    {% ifequal error 2 %}
+					    <div style="margin-top:10px" id="msg">
+					    	<span class="cred" style="margin-left: 100px">出现异常</span>
+					    </div>
+					    {% endifequal %}
+				    {% endifequal %}
+				 </div>
+			</form>
+		</div>
+	</body>
+</html>
+
+<script type="text/javascript" src="{% static 'layui/layui.js' %}"></script>
+
+<script type="text/javascript">
+	layui.use(['form','jquery'],function(){
+		var $ = layui.jquery;
+		var height = $("#wrap").height()
+		var body_height = $("body").height()
+		var top = (body_height - height) / 2;
+		if(top > 200){
+			top -= 100;
+		}
+		$("#wrap").css("top",top);
+
+		$('input').focus(function(){
+			$("#msg").text('')
+		});
+	});
+</script>

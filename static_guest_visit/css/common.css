@@ -1,0 +1,134 @@
+.h38{height:38px}
+.h40{height:40px}
+.h60{height:60px}
+.h500{height:500px}
+
+.lh38{line-height: 38px}
+.lh40{line-height: 40px}
+.lh60{line-height: 60px}
+
+.fs14{font-size: 14px}
+.fs16{font-size: 16px}
+.fs18{font-size: 18px}
+
+.redinput{
+  display:inline-block;
+  height:38px;
+  line-height:38px;
+  color:red;
+  font-size:25px;
+  padding-top:3px
+}
+
+.tc{text-align: center !important}
+
+.dis_ib{display: inline-block}
+
+.pad5{padding:5px}
+.pad2_5{padding:2px 5px}
+.pad10{padding:10px}
+.pad10_0{padding:10px 0}
+.pad0_10{padding:0 10px !important}
+
+.marl10{margin-left: 10px}
+
+.cfff{color:#fff !important}
+.c333{color:#333}
+.cred{color:red}
+
+.fw_bd{font-weight: bold}
+
+.hide{display: none}
+
+.nav-item{
+	position: relative;
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 60px;
+}
+
+.nav-item a{padding:0 20px}
+
+.w30{width:30px}
+.w50{width:50px}
+.w100{width:100px}
+.w250{width:250px !important}
+.w12_{width:12%}
+.w88_{width:88%}
+
+.bg589{background-color: #589BD5}
+.bgffc{background-color: #FFC7CE}
+.bgfff{background-color: #fff}
+.bgf2f{background-color: #f2f2f2}
+.bgred{background-color: red}
+
+.fr{float:right}
+
+.msg-input{
+  border:0;
+  border-bottom: 1px solid #d2d2d2
+}
+
+.td-item{
+  width:60px;
+	padding-right:10px;
+	text-align: right;
+}
+
+.listlabel{
+  float:right;
+  width:88%;
+  padding:10px;
+}
+
+.label-left{
+  display: inline-block;
+  padding:0 5px;
+  background-color: #70ad47;
+  color:#fff;
+  height:30px;
+  line-height: 30px;
+  width:60px;
+}
+
+.label-right{
+  display: inline-block;
+  padding:0 5px;
+  margin-left:-5px;
+  background-color:#c6e084;
+  color:#000;
+  height:30px;
+  line-height: 30px;
+  width:120px;
+  border:0;
+}
+
+#upd_pass_msg{
+  height:15px;
+  line-height:15px;
+  width:100%;
+  margin-top:10px;
+  color:red;
+  text-align: center;
+}
+.fengqin{
+  position:absolute;width:250px;height:100%;overflow: auto;
+  border-color:#000;background:#fff;top:60px;max-height: 95%;
+  right:-300px;z-index:2;box-shadow: 8px rgba(28,31,33,.1);
+}
+.title{
+  height:14px;
+  line-height:14px;
+  font-size:16px;
+  background:#393D49;
+  color:#fff;
+  padding:10px;
+  border-top:1px solid #fff;
+  border-bottom: 1px solid #fff;
+}
+.c333{color:#333}
+.pad10{padding:10px}
+.pad10_0{padding:10px 0}
+.pad2_15{padding:2px 15px}
+.bor_bbdd{border-bottom:1px solid #BDD7EE}
+.bor_red{border:1px solid red}

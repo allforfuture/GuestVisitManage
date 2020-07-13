@@ -1,0 +1,13 @@
+{
+  "databases":[
+    {
+      "MODEL":"GuestVisitManage",
+      "ENGINE": "django.db.backends.postgresql_psycopg2",
+      "NAME": "guest_visit_manage",
+      "USER": "pqm",
+      "PASSWORD": "dbuser",
+      "HOST": "172.27.32.30",
+      "PORT": "5432"
+    }
+  ]
+}

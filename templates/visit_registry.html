@@ -1,0 +1,691 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<style type="text/css">
+  .demo-class .layui-layer-title{background:#c00; color:#fff; border: none;}
+  .demo-class .layui-layer-btn{border-top:1px solid #E9E7E7}
+  .demo-class .layui-layer-btn a{background:#333;}
+  .demo-class .layui-layer-btn .layui-layer-btn1{background:#999;}
+</style>
+
+<div class="fengqin">
+  <p class="title">请输入访客姓名</p>
+  <ul class="c333" id="nameswrap">
+    <li class="pad2_15 bor_bbdd" onmouseover="li_over(this)" onmouseout="li_out(this)">
+      <div class="layui-row">
+        <div class="layui-col-xs1 layui-form pad10_0 w12_">
+          <input type="checkbox" name="name_check" lay-skin="primary" checked/>
+        </div>
+        <div class="layui-col-xs11 hide fr w88_ pad10"></div>
+        <div class="layui-col-xs11 fr w88_ fr names">
+          <input type="text" placeholder="请输入姓名" autocomplete="off" class="layui-input">
+        </div>
+      </div>
+    </li>
+    <li class="pad2_15 bor_bbdd" onmouseover="li_over(this)" onmouseout="li_out(this)">
+      <div class="layui-row">
+        <div class="layui-col-xs1 layui-form pad10_0 w12_">
+          <input type="checkbox" name="name_check" lay-skin="primary" checked>
+        </div>
+        <div class="layui-col-xs11 hide fr w88_ pad10"></div>
+        <div class="layui-col-xs11 fr w88_ fr names">
+          <input type="text" placeholder="请输入姓名" autocomplete="off" class="layui-input">
+        </div>
+      </div>
+    </li>
+    <li class="pad2_15 bor_bbdd" onmouseover="li_over(this)" onmouseout="li_out(this)">
+      <div class="layui-row">
+        <div class="layui-col-xs1 layui-form pad10_0 w12_">
+          <input type="checkbox" name="name_check" lay-skin="primary" checked>
+        </div>
+        <div class="layui-col-xs11 hide fr w88_ pad10"></div>
+        <div class="layui-col-xs11 fr w88_ fr names">
+          <input type="text" placeholder="请输入姓名" autocomplete="off" class="layui-input">
+        </div>
+      </div>
+    </li>
+  </ul>
+  <div class="layui-btn-group" style="margin:10px 0 10px 42px">
+    <button class="layui-btn layui-btn-sm" onclick="getnames()">确定</button>
+    <button class="layui-btn layui-btn-sm" id="add">新增</button>
+    <button class="layui-btn layui-btn-sm" id="del">删除</button>
+    <button class="layui-btn layui-btn-sm" id="cel">取消</button>
+  </div>
+</div>
+
+<!-- 访客录入信息Excel数据展示 -->
+<script type="text/html" id="excel_operation">
+  <button class="layui-btn layui-btn-danger layui-btn-sm" lay-event="excel_del">删除</button>
+</script>
+
+<div id="uploadwrap" class="hide" style="padding:0 10px">
+  <div style="margin-top: 15px;clear:both">
+    <div class="layui-inline">
+      <label class="layui-form-label">访问日期:</label>
+      <div class="layui-input-inline">
+        <input autocomplete="off" class="layui-input" placeholder="请输入访问日期" id="schedule_date2" />
+      </div>
+      <div class="layui-form-mid cred fs16 fr" style="margin-left: 5px;padding-top:12px !important">*</div>
+    </div>
+    <div class="layui-inline">
+      <label class="layui-form-label">访问时间:</label>
+      <div class="layui-input-inline">
+        <input autocomplete="off" class="layui-input" placeholder="请输入访问时间" id="schedule_time2" />
+      </div>
+      <div class="layui-form-mid cred fs16 fr" style="margin-left: 5px;padding-top:12px !important">*</div>
+    </div>
+  </div>
+  <table lay-even lay-skin="line" lay-filter="excel_filter" id="uploadtable"></table>
+</div>
+
+<div class="layui-col-sm10 layui-col-sm-offset1">
+  <fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
+    <legend>访客信息录入</legend>
+  </fieldset>
+
+  <div id="content" class="layui-form layui-col-sm-offset2" style="width:1100px">
+    <div class="layui-form-item">
+      <div class="layui-inline">
+        <label class="layui-form-label">访问人数:</label>
+        <div class="layui-input-inline">
+          <input type="radio" name="single_multiply" value="single" title="单人" checked>
+          <input type="radio" name="single_multiply" value="multiply" title="多人">
+        </div>
+        <div class="layui-form-mid cred fs16" style="padding-top:12px !important;visibility:hidden;">*</div>
+      </div>
+      <div class="layui-inline">
+        <label class="layui-form-label">访客姓名:</label>
+        <div class="layui-input-inline">
+          <input type="text" id="visit_name" lay-verify="required" autocomplete="off" class="layui-input" placeholder="请输入姓名">
+        </div>
+        <div class="layui-form-mid cred fs16" style="padding-top:12px !important">*</div>
+      </div>
+    </div>
+
+    <div class="layui-form-item">
+      <div class="layui-inline">
+          <label class="layui-form-label">来访日期:</label>
+          <div class="layui-input-inline">
+            <input type="tel" id="schedule_date" lay-verify="required" autocomplete="off" class="layui-input">
+          </div>
+          <div class="layui-form-mid cred fs16" style="padding-top:12px !important">*</div>
+      </div>
+      <div class="layui-inline">
+        <label class="layui-form-label">来访时间:</label>
+        <div class="layui-input-inline">
+          <input type="text" id="schedule_time" lay-verify="required" autocomplete="off" class="layui-input" placeholder="请选择来访时间">
+        </div>
+        <div class="layui-form-mid cred fs16" style="padding-top:12px !important">*</div>
+      </div>
+    </div>
+    
+    <div class="layui-form-item">
+      <div class="layui-inline">
+        <label class="layui-form-label">联系电话:</label>
+        <div class="layui-input-inline">
+          <input type="tel" id="visit_phone" lay-verify="required" autocomplete="off" class="layui-input" placeholder="请输入手机号码">
+        </div>
+        <div class="layui-form-mid cred fs16" style="padding-top:12px !important">*</div>
+      </div>
+      <div class="layui-inline">
+        <label class="layui-form-label">证件号码:</label>
+        <div class="layui-input-inline">
+          <input type="text" id="visit_identify" autocomplete="off" class="layui-input" placeholder="身份证号" onfocus="show_identify_tips(this)">
+        </div>
+        <div class="layui-form-mid cred fs16" style="padding-top:12px !important">*</div>
+      </div>
+    </div>
+    
+    <div class="layui-form-item">
+      <div class="layui-inline">
+        <label class="layui-form-label">所属公司:</label>
+        <div class="layui-input-inline">
+          <input type="text" id="visit_company" lay-verify="required" autocomplete="off" class="layui-input" placeholder="所属单位（公司）">
+        </div>
+        <div class="layui-form-mid cred fs16" style="padding-top:12px !important">*</div>
+      </div>
+      <div class="layui-inline">
+        <label class="layui-form-label">车牌号码:</label>
+        <div class="layui-input-inline">
+          <input type="text" id="visit_cardno" autocomplete="off" class="layui-input" placeholder="车牌号（可选填）">
+        </div>
+        <div class="layui-form-mid cred fs16" style="padding-top:12px !important">&nbsp;</div>
+      </div>
+      <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">来访原因:</label>
+        <div class="layui-input-inline">
+            <textarea placeholder="来访原因" id="visit_other" class="layui-textarea" style="width:530px"></textarea>
+        </div>
+        <div class="layui-form-mid cred fs16" style="padding-top:12px !important">*</div>
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <div class="layui-input-block">
+        <button class="layui-btn" onclick="visit_register()" >立即提交</button>
+        <button class="layui-btn layui-btn-primary" onclick="reset()">输入重置</button>
+        <a class="layui-btn" style="margin-left: 78px" href="/download_template">模板下载</a>
+        <button type="button" class="layui-btn" id="uploaddata">
+          <i class="layui-icon">&#xe67c;</i>模板数据导入
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="clear:both"></div>
+<div id="msg" class="hide">
+  <div>
+    <div class="layui-form-item">
+      <div class="layui-inline">
+        <label class="layui-form-label">来访日期:</label>
+        <div class="layui-input-inline" style="width:150px !important">
+          <input type="tel" id="msg_scheduledate" class="layui-input msg-input" readonly>
+        </div>
+      </div>
+      <div class="layui-inline">
+        <label class="layui-form-label">来访时间:</label>
+        <div class="layui-input-inline" style="width:150px !important">
+          <input type="text" id="msg_scheduletime" class="layui-input msg-input" readonly>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="layui-form-item">
+      <div class="layui-inline">
+        <label class="layui-form-label">访客姓名:</label>
+        <div class="layui-input-inline" style="width:150px !important">
+          <input type="tel" id="msg_name" class="layui-input msg-input" readonly>
+        </div>
+      </div>
+      <div class="layui-inline">
+        <label class="layui-form-label">访客电话:</label>
+        <div class="layui-input-inline" style="width:150px !important">
+          <input type="text" id="msg_phone" class="layui-input msg-input" readonly>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="layui-form-item">
+      <div class="layui-inline">
+        <label class="layui-form-label">所属公司:</label>
+        <div class="layui-input-inline" style="width:435px !important">
+          <input type="tel" id="msg_company" class="layui-input msg-input" readonly>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var $ = '';
+var form = '';
+layui.use(['jquery','form', 'layedit', 'laydate','upload','table'], function(){
+  form = layui.form
+  layer = layui.layer
+  $ = layui.jquery
+  laydate = layui.laydate;
+  upload = layui.upload;
+  table = layui.table;
+
+  laydate.render({
+    elem:'#schedule_date',
+    type:'date',
+    value:new Date(),
+    done: function(value, date, endDate){
+      if(value != '' && $("#schedule_date").hasClass('bor_red')){
+        $('#schedule_date').removeClass('bor_red');
+      }
+    }
+  });
+
+  laydate.render({
+    elem:'#schedule_time',
+    type:'time',
+    format:'HH:mm',
+    done: function(value, date, endDate){
+      if(value != '' && $("#schedule_time").hasClass('bor_red')){
+        $('#schedule_time').removeClass('bor_red');
+      }
+    }
+  });
+
+  laydate.render({
+    elem:'#schedule_date2',
+    type:'date',
+    value:new Date(),
+    done:function(value, date, endDate){
+      if($('#schedule_date2').hasClass('bor_red')){
+        $('#schedule_date2').removeClass('bor_red');
+      }
+    }
+  });
+
+  laydate.render({
+    elem:'#schedule_time2',
+    type:'time',
+    format:'HH:mm',
+    done: function(value, date, endDate){
+      if($('#schedule_time2').hasClass('bor_red')){
+        $('#schedule_time2').removeClass('bor_red');
+      }
+    }
+  });
+
+  table.render({
+    elem: '#uploadtable'
+    ,url: '/get_readcsv_data' //数据接口
+    ,cols: [[ //表头
+      {field: 'index', title: '序号', width:80}
+      ,{field: 'visit_name', title: '访客姓名', width:100, edit: true}
+      ,{field: 'visit_phone', title: '访客电话',width:120, edit: true}
+      ,{field: 'visit_company', title: '访客所属单位（公司）',width:200, edit: true}
+      ,{field: 'visit_identify', title: '证件号码',width:120, edit: true}
+      ,{field: 'visit_cardno', title: '车牌号',width:100, edit: true}
+      ,{field: 'visit_reason', title: '来访原因',width:310, edit: true}
+      ,{title:'操作',width:80, align:'center', toolbar:'#excel_operation'}
+    ]]
+  });
+
+  //删除当前行
+  table.on('tool(excel_filter)', function(obj){
+    let data = obj.data;  //获取当前行数据
+    let layEvent = obj.event;
+    let tr = obj.tr;
+
+    if(layEvent == 'excel_del'){
+      layer.confirm('确认要删除不',{icon:3},function(index){
+        obj.del();
+        layer.close(index);
+        //向服务端发送删除指令
+        
+      });
+    }
+  });
+
+  uploadInst = upload.render({
+    elem: '#uploaddata',
+    url: '/uploaddata',
+    data: {
+      'csrfmiddlewaretoken': '{{ csrf_token }}'
+    },
+    accept: 'file',
+    before: function(obj){
+      layer.load();
+    },
+    done: function(res){
+      layer.closeAll('loading');
+      let tmp_file = res.tmp_file;
+      table.reload('uploadtable',{
+        where: {
+          tmp_file:tmp_file
+        }
+      });
+      layer.open({
+        type: 1,
+        title:'录入详情查看',
+        area:['90%','400px'],
+        content: $('#uploadwrap'),
+        btn:['确认提交','点击取消'],
+        yes: function(index, layero){
+          if($('#schedule_date2').val() == ''){
+            isnull_tip_msg('访问日期不能为空！',$("#schedule_date2"));
+            return
+          }
+          if($('#schedule_time2').val() == ''){
+            isnull_tip_msg('访问时间不能为空！',$("#schedule_time2"));
+            return
+          }
+          let visit_data = get_excel_data()
+          if(visit_data.length == 0){
+            layer.alert('您未写入任何数据！',{icon:7})
+            return
+          }
+          $.get('/register_from_excel', {visit_data: JSON.stringify(visit_data)}, 
+            function(data){
+              data = JSON.parse(data)
+              if(data.result){
+                layer.msg('录入成功，录入数量 ' + data.num,{icon:1})
+              }else{
+                layer.alert(data.msg,{icon:7})
+              }
+              layer.close(index);
+            });
+        },
+        btn2: function(index, layero){
+
+        }
+      });
+    },
+    error:function(){
+      layer.closeAll('loading');
+    }
+  })
+
+  function get_excel_data(){
+    let data = []
+    let user_id = $('#user_id').val().trim()
+    let schedule_date = $('#schedule_date2').val()
+    let schedule_time = $('#schedule_time2').val()
+
+    $('#uploadtable').next().find('tbody tr').each(function(){
+      let identity_no = {
+        visit_phone:$(this).find('td:eq(2)').text(),
+        visit_cardno:$(this).find('td:eq(5)').text(),
+        visit_identify:$(this).find('td:eq(4)').text(),
+        visit_other:$(this).find('td:eq(6)').text()
+      }
+      /*
+      let visit = {
+        schedule_date:schedule_date,
+        schedule_time:schedule_time,
+        company:$(this).find('td:eq(3)').text(),
+        visit:$(this).find('td:eq(1)').text(),
+        identity_no:identity_no,
+        employee_id:user_id
+      }
+      */
+      let company = $(this).find('td:eq(3)').text().trim()
+      let visit = $(this).find('td:eq(1)').text().trim()
+      let visit_user = [schedule_date, schedule_time, company, visit, JSON.stringify(identity_no), user_id]
+      data.push(visit_user)
+    });
+    return data
+  }
+
+  $("#content input").each(function(){
+    $(this).change(function(){
+      if($(this).hasClass('bor_red')){
+        $(this).removeClass('bor_red');
+      }
+    })
+  });
+
+  $("#visit_other").change(function(){
+    if($(this).hasClass('bor_red')){
+      $(this).removeClass('bor_red');
+    }
+  });
+
+  form.on('radio()', function(data){
+    let single_multiply = data.value;
+    if(single_multiply == 'multiply'){
+      $("#modal").removeClass('hide');
+      $(".fengqin").animate({'right': 0},500);
+      setTimeout(function(){
+        $('#nameswrap input[type="text"]:first').focus();
+      },500)
+    }else{
+      $("#visit_name").val('').removeAttr('disabled').focus();
+      $("#nameswrap").find('input[type="text"]').val('');
+    }
+  });
+
+  //输入框获取焦点回车后添加新行.
+  $(window).keyup(function(event){
+    var keycode = event.keyCode;
+    var isFocus = $('#nameswrap input[type="text"]:last').is(':focus')
+    if(keycode == 13){
+      if(isFocus){
+        //添加新行
+        $("#add").click();
+      }else{
+        allinput = ('.serialno input[type="text"]')
+        $('#nameswrap input[type="text"]').each(function(index){
+          if($(this).is(':focus')){
+            let next = index + 1;
+            $('#nameswrap input[type="text"]').eq(next).focus();
+            return false
+          }
+        });
+      }
+    }
+  });
+
+  //新增一行姓名输入栏
+  $("#add").click(function(){
+    str = '<li class="pad2_15 bor_bbdd" onmouseover="li_over(this)" onmouseout="li_out(this)">' +
+            '<div class="layui-row">' +
+              '<div class="layui-col-xs1 layui-form pad10_0 w12_">' +
+                '<input type="checkbox" name="name_check" lay-skin="primary" checked>' +
+              '</div>' +
+              '<div class="layui-col-xs11 hide fr w88_ pad10"></div>' +
+              '<div class="layui-col-xs11 fr w88_ fr names">' +
+                '<input type="text" placeholder="请输入姓名" autocomplete="off" class="layui-input">' +
+              '</div>' +
+            '</div>' +
+          '</li>'
+    $("#nameswrap").append(str);
+    $("#nameswrap input[type='text']:last").focus();
+    form.render('checkbox')
+  });
+
+  //删除姓名输入栏
+  $("#del").click(function(){
+    var delnum = $('input[name="name_check"]:checked').length;
+    if(delnum == 0){
+      layer.alert('您至少要选中一项！',{icon:7})
+      return;
+    }
+    $('input[name="name_check"]').each(function(){
+      if($(this).is(':checked')){
+        $(this).parent().parent().parent().remove();
+      }
+    });
+  });
+
+  //点击取消按钮取消姓名输入
+  $("#cel").click(function(){
+    $('div[class="layui-unselect layui-form-radio"]').click();
+    $("#visit_name").val('');
+    $("#nameswrap").find('input[type="text"]').val('');
+    hide_modal();
+    $("#visit_name").removeAttr('disabled');
+    $("#visit_name").focus();
+  });
+});
+
+//点击确定获取多条名字输入记录
+function getnames(){
+  let user_name_list = [];
+  $("#nameswrap li").each(function(){
+    let ischecked = $(this).find('input[type="checkbox"]:eq(0)').is(':checked');
+    let user_name = $(this).find('input[type="text"]:eq(0)').val();
+    if(ischecked && user_name != ''){
+      user_name_list.push(user_name);
+    }
+  });
+  if(user_name_list.length == 0){
+    layer.alert('至少要输入一项！',{icon:7})
+  }else{
+    $('#visit_name').val(user_name_list.toString());
+    hide_modal();
+    if(user_name_list.length > 1){
+      $('#visit_name').attr('disabled','disabled');
+    }
+  }
+}
+
+//重置所有输入
+function reset(){
+    $("#schedule_date").val('');
+    $("#schedule_time").val('');
+    $("#visit_name").val('');
+    $("#visit_company").val('');
+    $("#visit_phone").val('');
+    $("#visit_cardno").val('');
+    $("#visit_identify").val('');
+    $("#visit_other").val('');
+}
+
+//隐藏姓名列表输入
+function hide_modal(){
+  $(".fengqin").animate({'right': '-300px'},500);
+  $("#visit_name").attr('disabled','disabled');
+  setTimeout(function(){
+    $("#modal").addClass('hide');
+  },500);
+}
+
+//显示提交详情信息
+function get_msg(schedule_date,schedule_time,visit_name,visit_phone,visit_company,visit_identify,visit_other){
+  str = '<div>'
+       + '<div class="layui-form-item">'
+       +   '<div class="layui-inline">'
+       +     '<label class="layui-form-label">访客姓名:</label>'
+       +    '<div class="layui-input-inline" style="width:435px !important">'
+       +       '<input type="tel" id="msg_company" class="layui-input msg-input" value="'+visit_name+'" readonly>'
+       +     '</div>'
+       +   '</div>'
+       + '</div>'
+       +  '<div class="layui-form-item">'
+       +    '<div class="layui-inline">'
+       +      '<label class="layui-form-label">日程日期:</label>'
+       +      '<div class="layui-input-inline" style="width:150px !important">'
+       +        '<input type="tel" id="msg_scheduledate" class="layui-input msg-input" value="'+schedule_date+'" readonly>'
+       +      '</div>'
+       +    '</div>'
+       +    '<div class="layui-inline">'
+       +      '<label class="layui-form-label">日程时间:</label>'
+       +      '<div class="layui-input-inline" style="width:150px !important">'
+       +        '<input type="text" id="msg_scheduletime" class="layui-input msg-input" value="'+schedule_time+'" readonly>'
+       +      '</div>'
+       +    '</div>'
+       +  '</div>'
+       + '</div>'
+       +'<div>'
+       +  '<div class="layui-form-item">'
+       +    '<div class="layui-inline">'
+       +     '<label class="layui-form-label">证件号码:</label>'
+       +     '<div class="layui-input-inline" style="width:150px !important">'
+       +       '<input type="tel" id="msg_name" class="layui-input msg-input" value="'+visit_identify+'" readonly>'
+       +     '</div>'
+       +   '</div>'
+       +   '<div class="layui-inline">'
+       +     '<label class="layui-form-label">访客电话:</label>'
+       +     '<div class="layui-input-inline" style="width:150px !important">'
+       +       '<input type="text" id="msg_phone" class="layui-input msg-input" value="'+visit_phone+'" readonly>'
+       +     '</div>'
+       +   '</div>'
+       + '</div>'
+       +'</div>'
+       +'<div>'
+       + '<div class="layui-form-item">'
+       +   '<div class="layui-inline">'
+       +     '<label class="layui-form-label">所属公司:</label>'
+       +    '<div class="layui-input-inline" style="width:435px !important">'
+       +       '<input type="tel" id="msg_company" class="layui-input msg-input" value="'+visit_company+'" readonly>'
+       +     '</div>'
+       +   '</div>'
+       + '</div>'
+       + '<div class="layui-form-item">'
+       +   '<div class="layui-inline">'
+       +     '<label class="layui-form-label">来访事由:</label>'
+       +    '<div class="layui-input-inline" style="width:435px !important">'
+       +       '<input type="tel" id="msg_company" class="layui-input msg-input" value="'+visit_other+'" readonly>'
+       +     '</div>'
+       +   '</div>'
+       + '</div>'
+       +'</div>'
+    return str;
+}
+
+function li_over(obj){
+  $(obj).addClass('bgf2f')
+}
+
+function li_out(obj){
+  $(obj).removeClass('bgf2f')
+}
+
+//登记客户信息
+function visit_register(){
+    var schedule_date = $("#schedule_date").val();
+    var schedule_time = $("#schedule_time").val() + ':00';
+    var visit_name = $("#visit_name").val();
+    var visit_company = $("#visit_company").val();
+    var visit_phone = $("#visit_phone").val();
+    var visit_cardno = $("#visit_cardno").val();
+    var visit_identify = $("#visit_identify").val();
+    var visit_other = $("#visit_other").val();
+    var single_multiply = $('input[name="single_multiply"]:checked').val()
+
+    var identity_no = {"visit_phone":visit_phone,"visit_cardno":visit_cardno,"visit_identify":visit_identify,"visit_other":visit_other}
+    identity_no = JSON.stringify(identity_no)
+
+    /*
+    if(schedule_date == '' || schedule_time == '' || schedule_time == ':00' || visit_name == '' || visit_company == '' || visit_phone == '' || visit_other == '' || visit_identify == ''){
+        layer.msg('必填项不能为空！',{icon:5})
+        return
+    }
+    */
+    is_null = true;
+    if(visit_name == ''){
+      isnull_tip_msg('访客姓名不能为空！',$("#visit_name"));
+    }else if(schedule_date == ''){
+      isnull_tip_msg('访问日期不能为空',$("#schedule_date"));
+    }else if(schedule_time == '' || schedule_time == ':00'){
+      isnull_tip_msg('访问时间不能为空',$("#schedule_time"));
+    }else if(visit_phone == ''){
+      isnull_tip_msg('访客联系方式不能为空！',$("#visit_phone"));
+    }else if(visit_company == ''){
+      isnull_tip_msg('访客所属单位（公司）不能为空!',$("#visit_company"));
+    }else if(visit_identify == ''){
+      isnull_tip_msg('访客身份信息（身份证）不能为空！',$("#visit_identify"));
+    }else if(visit_other == ''){
+      isnull_tip_msg('来访原因不能为空！',$("#visit_other"));
+    }else{
+      is_null = false;
+    }
+    if(is_null){
+      return
+    }
+
+    data = {
+        schedule_date:schedule_date,schedule_time:schedule_time,visit_name:visit_name,
+        visit_company:visit_company,identity_no:identity_no,single_multiply:single_multiply
+    };
+
+    var msg = get_msg(schedule_date,schedule_time,visit_name,visit_phone,visit_company,visit_identify,visit_other);
+    layer.open({
+      title: '访客登记信息确认'
+      ,content:msg
+      ,skin: 'demo-class' //样式类名
+      ,closeBtn: 0
+      ,anim: 1 //动画类型
+      ,area: ['630px','420px']
+      ,resize:false
+      ,scrollbar :false
+      ,shadeClose:true
+      ,closeBtn:1
+      ,btn:['确定提交','取消操作']
+      ,yes:function(index,layero){
+          $.ajax({
+            url:'visit_register',
+            type:'get',
+            data:data,
+            dataType:'json',
+            success:function(data){
+              if(data.result){
+                layer.msg('操作成功,录入数量:' + data.num,{icon:1})
+                reset()
+              }else{
+                layer.msg(data.msg,{icon:5})
+              }
+            },
+            error:function(xmlHq,status,errorThrows){
+                console.log(status)
+            }
+          });
+          layer.close(index);
+      },
+      btn2:function(index,layero){
+        layer.msg('操作已取消');
+      }
+  });
+}
+
+</script>
+{% endblock %}

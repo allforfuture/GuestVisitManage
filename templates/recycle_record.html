@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+  <div class="layui-side layui-bg-black pad5" style="top:55px">
+    <div>
+      <p class="bg589 h15 lh15 pad5">扫描临时厂牌号</p>
+    </div>
+    <ul class="bgfff c333 serialno">
+      <li class="pad2_5">
+        <div class="layui-row">
+          <div class="layui-col-xs1 layui-form pad10_0 w12_">
+            <input type="checkbox" name="checkserialno" lay-skin="primary" checked>
+          </div>
+          <div class="layui-col-xs11 fr w88_">
+            <input type="text" name="cardno" autocomplete="off" class="layui-input">
+          </div>
+        </div>
+      </li>
+    </ul>
+    <div class="layui-row pad10">
+      <div class="layui-btn layui-col-xs3 layui-btn-xs" id="add">新增</div>
+      <div class="layui-btn layui-col-xs3 layui-btn-xs layui-btn-danger" id="del">删除</div>
+      <div class="layui-btn layui-col-xs3 layui-btn-xs layui-btn-normal" id="search">查询</div>
+    </div>
+  </div>
+
+  <div class="layui-body" style="left:220px;top:60px;padding-right: 10px">
+    <form class="layui-form" style="margin-top:10px">
+      <div class="layui-form-item layui-col-sm4">
+        <label class="layui-form-label">出厂位置:</label>
+        <div class="layui-input-block">
+          <select lay-verify="required" id="out_places"></select>
+        </div>
+      </div>
+    </form>
+
+    <table class="layui-table" lay-even>
+      <thead>
+        <tr>
+          <th class="tc">
+            <div class="layui-form tc">
+              <!--<input type="checkbox" lay-skin="primary" checked>-->
+            </div>
+          </th>
+          <th>临时厂牌号</th>
+          <th>访客姓名</th>
+          <th>进厂位置</th>
+          <th>厂牌状态</th>
+          <th>访问时间</th>
+          <th>访问时长</th>
+          <th>记录人（保安）</th>
+        </tr>
+      </thead>
+      <tbody id="tbody">
+        <tr>
+          <td colspan="8" class="tc">请扫描临时厂牌搜索数据</td>
+        </tr>
+        <!--
+        <tr>
+          <td>
+            <div class="layui-form tc">
+              <input type="checkbox" lay-skin="primary" checked>
+            </div>
+          </td>
+          <td>xxx-xx-x</td>
+          <td>李四</td>
+          <td>二号大门</td>
+          <td>已发放</td>
+          <td>2018-08-23 14:55:21</td>
+          <td class="bgred cfff">1天2小时6分</td>
+          <td>小二</td>
+        </tr>
+        -->
+      </tbody>
+    </table>
+    <div class="layui-btn layui-col-xs2 layui-btn-green fr" onclick="recycle_all()">一键回收</div>
+  </div>
+
+  <script type="text/javascript">
+    var $,form;
+    var allplaces = '{{allplaces}}'.replace(/&#39;/g,'\"');
+    allplaces = JSON.parse(allplaces);
+
+    layui.use(['element','jquery','form'], function(){
+      $ = layui.jquery;
+      form = layui.form;
+      $(function(){
+        $('.serialno input[type="text"]:last').focus();
+        $('.serialno').on('mouseover','li',function(){
+          $(this).addClass('bgf2f');
+        });
+        $('.serialno').on('mouseout','li',function(){
+          $(this).removeClass('bgf2f');
+        })
+        var str_places = '<option value="">请选择出厂位置</option>'
+        for(var i=0;i<allplaces.length;i++){
+          str_places += '<option value="' + allplaces[i].place_cd + '">' + allplaces[i].place_name + '</option>'
+        }
+        $("#out_places").html(str_places)
+        form.render('select')
+      });
+
+      $("#search").click(function(){
+        var cardnolist = [];
+        $('input[name="cardno"]').each(function(index){
+          var cardno = $(this).val();
+          var ischecked = $('input[type="checkbox"][name="checkserialno"]').eq(index).is(':checked')
+          if(cardno != '' && ischecked){
+            cardnolist.push(cardno);
+          }
+        });
+        if(cardnolist.length == 0){
+          layer.alert('至少要输入并选中一项！',{title:'温馨提示',icon:6})
+        }else{
+          //提交临时卡号进行查询
+          recycle_search(cardnolist);
+        }
+      });
+
+      //点击新增按钮新增一行
+      $("#add").click(function(){
+        str = '<li class="pad2_5">' +
+          '<div class="layui-row">' +
+            '<div class="layui-col-xs1 layui-form pad10_0 w12_">' +
+              '<input type="checkbox" name="checkserialno" lay-skin="primary" checked>' +
+            '</div>' +
+            '<div class="layui-col-xs11 fr w88_">' +
+              '<input type="text" name="cardno" autocomplete="off" class="layui-input">' +
+            '</div>' +
+          '</div>' +
+          '</li>'
+        $(".serialno").append(str);
+        $(".serialno li:last").find('input[type="text"]').focus();
+        form.render('checkbox');
+      });
+
+      $("#del").click(function(){
+        var delnum = $('input[name="checkserialno"]:checked').length;
+        if(delnum == 0){
+          layer.msg('您至少要选择一项！');
+          return;
+        }
+        $('input[name="checkserialno"]').each(function(){
+          if($(this).is(':checked')){
+            value = $(this).parent().next().text()
+            $(this).parent().parent().parent().remove();
+            if(value != ''){
+              var repeat = 0;
+              $(".listlabel").each(function(){
+                if(value == $(this).text()){
+                  repeat ++;
+                }
+              });
+              $(".listlabel").each(function(){
+                if(value == $(this).text() && repeat ==1){
+                  $(this).removeClass('bgffc');
+                }
+              });
+            }
+          }
+        });
+        layer.msg('删除成功,删除数量： ' + delnum+ ' 条');
+      });
+
+      //输入框获取焦点回车后添加新行.
+      $(window).keyup(function(event){
+        var keycode = event.keyCode;
+        var isFocus = $('.serialno input[type="text"]:last').is(':focus')
+        if(keycode == 13){
+          if(isFocus){
+            //添加新行
+            $("#add").click();
+          }else{
+            allinput = ('.serialno input[type="text"]')
+            $('.serialno input[type="text"]').each(function(index){
+              if($(this).is(':focus')){
+                if($(this).parent().parent().parent().next().find('input[type="text"]:first').parent().hasClass('hide')){
+                  $('.serialno .listlabel').eq(index + 1).dblclick()
+                  return false
+                }else{
+                  $('.serialno input[type="text"]').eq(index + 1).focus()
+                  return false
+                }
+              }
+            });
+          }
+        }
+      });
+    });
+
+    //厂牌回收前查询
+    function recycle_search(cardnolist){
+      $.get('recycle_search',{cardnolist:JSON.stringify(cardnolist)},function(data){
+        str = '';
+        if(typeof(data) == 'string'){
+          data = JSON.parse(data)
+        }
+        if(data.length == 0){
+          str = '<tr><td colspan="8" class="tc">未搜索到数据！</td></tr>'
+        }
+        for(var i=0;i<data.length;i++){
+          str += '<tr>'
+          str +=  '<td>'
+                  if(data[i].employee_id_out == ''){
+          str +=    '<div class="layui-form tc">'
+          str +=      '<input type="checkbox" name="data_seq" lay-skin="primary" value="'+data[i].data_seq+'" checked>'
+          str +=    '</div>'
+                  }
+          str +=  '</td>'
+          str +=  '<td>' + data[i].temporary_card + '</td>'
+          str +=  '<td>' + data[i].visit_name + '</td>'
+          str +=  '<td>' + data[i].place_name + '</td>'
+          str +=    '<td>'
+                    if(data[i].employee_id_out == ''){
+          str +=      '已发放'            
+                    }else{
+          str +=      '已回收'
+                    }
+          str +=    '</td>'
+          str +=  '<td>' + data[i].update_at + '</td>'
+                  if(data[i].is_over_time){
+          str +=  '<td class="bgred cfff">' + data[i].visit_duration + '</td>'
+                  }else{
+          str +=  '<td>' + data[i].visit_duration + '</td>'
+                  }
+          str +=  '<td>' + data[i].user_name + '</td>'
+          str += '</tr>'
+        }
+        $("#tbody").html(str)
+        form.render('checkbox')
+      });
+    }
+
+    //一键回收所有选中厂牌
+    function recycle_all(){
+      var data_seq_cardno_list = [];
+      var role_text = $("#role_text").val();
+      var out_place = $("#out_places").val();
+      if(out_place == ''){
+        layer.msg('出厂位置不能为空',{title:'温馨提示',icon:7})
+        return;
+      }
+      var can_recycle = 0;
+      $('input[name="data_seq"]').each(function(){
+        var data_seq = $(this).val();
+        var cardno = $(this).parent().parent().next().text().trim()
+        var ischecked = $(this).is(':checked')
+        if(ischecked){
+          data_seq_cardno_list.push({data_seq:data_seq,cardno:cardno});
+        }
+        if($(this).parent().parent().next().next().next().next().text() == '已发放'){
+          can_recycle += 1;
+        }
+      });
+      if(can_recycle == 0){
+        layer.alert('没有可回收项',{title:'温馨提示',icon:7})
+        return
+      }else if(data_seq_cardno_list.length == 0){
+        layer.alert('至少要选中一项！',{title:'温馨提示',icon:7})
+        return
+      }else if(role_text == ''){
+        layer.alert('您未登录，请先登录！',{title:'温馨提示',icon:5})
+        return 
+      }else if(role_text != 'Security' && role_text != 'APPROVER'){
+        layer.alert('无权限操作！',{title:'温馨提示',icon:5})
+        return
+      }
+      $.get('recycle_all',{'data_seq_cardno_list':JSON.stringify(data_seq_cardno_list),'out_place':out_place},function(data){
+        if(typeof(data) == 'string'){
+          data = JSON.parse(data)
+        }
+        if(data.result){
+          $("#search").click()
+          layer.msg('厂牌已回收')
+        }else{
+          layer.alert(data.msg,{title:'温馨提示',icon:5})
+        }
+      });
+    }
+
+  </script>
+
+{% endblock %}

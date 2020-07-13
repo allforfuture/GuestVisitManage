@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
+      <legend>{{ today }}</legend>
+    </fieldset>
+
+    <table class="layui-table hide" lay-even>
+        <thead>
+          <tr>
+            <th>访客姓名</th>
+            <th>日程日期</th>
+            <th>日程时间</th>
+            <th>所属公司（单位）</th>
+            <th>验证状态</th>
+            <th>登记人信息</th>
+            <th>确认人</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+            <!--
+            <tr>
+            <td style="cursor:pointer" onclick="getTips(this)">
+                <span>张三</span>
+                <div class="hide">
+                    <table>
+                        <tr>
+                            <td class="w100 td-item">访客Id:</td>
+                            <td>430524199012286632</td>
+                        </tr>
+                        <tr>
+                            <td class="w100 td-item">电话:</td>
+                            <td>1762052xxx</td>
+                        </tr>
+                        <tr>
+                            <td class="w100 td-item">车牌号:</td>
+                            <td>粤.B 496A13</td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+            <td>8月12号</td>
+            <td>12:43</td>
+            <td>Nidec</td>
+            <td>通过</td>
+            <td style="cursor:pointer" onclick="getTips(this)">
+                <span>马申</span>
+                <div class="hide">
+                    <table>
+                        <tr>
+                            <td class="w30 td-item">部门:</td>
+                            <td>信息系统部</td>
+                        </tr>
+                        <tr>
+                            <td class="w30 td-item">工号:</td>
+                            <td>20160512033</td>
+                        </tr>
+                        <tr>
+                            <td class="w30 td-item">电话:</td>
+                            <td>138xxx</td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+            <td>平冈部长</td>
+            <td class="pad0_10">
+                <button class="layui-btn layui-btn-primary layui-btn-sm layui-bg-green" onclick="getbrand(this)">
+                发放临时厂牌
+                </button>
+            </td>
+            </tr>
+            -->
+        </tbody>
+      </table>
+
+<script type="text/javascript">
+var allplaces = '{{allplaces}}'.replace(/&#39;/g,'\"');
+allplaces = JSON.parse(allplaces);
+var $ = '';
+
+layui.use('jquery',function(){
+    $ = layui.jquery;
+    appointsearch();
+})
+
+function appointsearch(){
+    $.ajax({
+        url:'appointsearch',
+        type:'get',
+        dataType:'json',
+        success:function(data){
+            appointlist = data.appointlist;
+            str = ''
+            if(appointlist.length == 0){
+                str = '<tr><td colspan="9" class="tc">未检索到数据</td></tr>'
+            }else{
+                for(var i=0;i<appointlist.length;i++){
+                    appoint = appointlist[i]
+                    str += '<tr>'
+                    str +=    '<td style="cursor:pointer" onclick="getTips(this)">'
+                    str +=        '<span>' + appoint.visitor_name + '</span>'
+                    str +=        '<div class="hide">'
+                    str +=            '<table>'
+                    str +=                '<tr>'
+                    str +=                    '<td class="td-item">电话:</td>'
+                    str +=                    '<td>' + appoint.identity_no.visit_phone + '</td>'
+                    str +=                '</tr>'
+                    str +=                '<tr>'
+                    str +=                    '<td class="td-item">车牌:</td>'
+                    str +=                    '<td>' + appoint.identity_no.visit_cardno + '</td>'
+                    str +=                '</tr>'
+                    str +=                '<tr>'
+                    str +=                    '<td class="td-item">证件号码:</td>'
+                    str +=                    '<td>' + appoint.identity_no.visit_identify + '</td>'
+                    str +=                '</tr>'
+                    str +=                '<tr>'
+                    str +=                    '<td class="td-item">其它信息:</td>'
+                    str +=                    '<td>' + appoint.identity_no.visit_other + '</td>'
+                    str +=                '</tr>'
+                    str +=            '</table>'
+                    str +=        '</div>'
+                    str +=    '</td>'
+                    str +=    '<td>' + appoint.schedule_date + '</td>'
+                    str +=    '<td>' + appoint.schedule_time + '</td>'
+                    str +=    '<td>' + appoint.company + '</td>'
+                    str +=    '<td>'
+                                if(appoint.approve_status != '' && appoint.approve_status != null){
+                    str +=      '通过'
+                                }else{
+                    str +=      '待确认'
+                                }
+                    str +=    '</td>'
+                    str +=    '<td style="cursor:pointer" onclick="getTips(this)">'
+                    str +=        '<span>' + appoint.user_name + '</span>'
+                    str +=        '<div class="hide">'
+                    str +=            '<table>'
+                    str +=                '<tr><td class="w30 td-item">部门:</td>'
+                    str +=                    '<td>' + appoint.depart + '</td>'
+                    str +=                '</tr>'
+                    str +=                '<tr><td class="w30 td-item">邮箱:</td>'
+                    str +=                    '<td>'+ appoint.contact_info.mail +'</td>'
+                    str +=                '</tr>'
+                    str +=                '<tr>'
+                    str +=                    '<td class="w30 td-item">电话:</td>'
+                    str +=                    '<td>'+appoint.contact_info.mobile+'</td>'
+                    str +=                '</tr>'
+                    str +=            '</table>'
+                    str +=        '</div>'
+                    str +=    '</td>'
+                    str +=    '<td>'
+                                if(appoint.approve_status == 1){
+                    str +=          appoint.approve_name
+                                }
+                    str +=    '</td>'
+                    str +=    '<td class="pad0_10">'
+                                if(appoint.approve_status == 1){
+                    str +=        '<button value="'+appoint.data_seq+'" class="layui-btn layui-btn-primary layui-btn-sm layui-bg-green" onclick="getbrand(this)">'
+                    str +=        '发放临时厂牌'
+                    str +=        '</button>'               
+                                }
+                    str +=    '</td>'
+                    str +=  '</tr>'
+                }
+            }
+            if($ == ''){
+                $ = layui.jquery;
+            }
+            $("table").removeClass('hide')
+            $("#tbody").html(str)
+        },
+        error:function(xmlHq,status,errorThrows){
+            console.log(status)
+        }
+    }) 
+}
+
+//鼠标点击显示详细信息
+function getbrand(obj){
+    var user_id = $("#user_id").val()
+    if(user_id == ''){
+        layer.alert('您未登录，请先登录！',{title:'温馨提示',icon:7})
+        return
+    }
+    var user_name = $(obj).parent().parent().find('td:eq(0)').find('span').text();
+    var place_option = '<option value="">请选择位置</option>'
+    for(var i=0;i<allplaces.length;i++){
+        place_option += '<option value="' + allplaces[i].place_cd + '">' + allplaces[i].place_name + '</option>'
+    }
+
+    layer.open({
+        id:1,
+        type: 1,
+        title:'请录入临时厂牌号',
+        skin:'layui-layer-rim',
+        area:['400px','330px'],
+        content: '<div class="layui-row" style="height:120px;margin:7px; margin-top:10px;">'
+                +'<form class="layui-form">'
+                +   '<div class="layui-row">'
+                +     '<div class="layui-form-item">'
+                +          '<label class="layui-col-sm4 tc h38 lh38">访客姓名:</label>'
+                +          '<div class="layui-col-sm8">'
+                +          '<input type="text" class="layui-input" autocomplete="off" style="border-width:0 0 1px 0" value="'+ user_name +'" disabled>'
+                +          '</div>'
+                +     '</div>'
+                +    '<div class="layui-form-item">'
+                +          '<label class="layui-col-sm4 tc h38 lh38">请选择位置:</label>'
+                +          '<div class="layui-col-sm8">'
+                +          '<select id="place_cd" lay-search="">'
+                +               place_option
+                +          '</select>'
+                +          '</div>'
+                +     '</div>'
+                +     '<div class="layui-form-item">'
+                +          '<label class="layui-col-sm4 tc h38 lh38">临时厂牌号:</label>'
+                +          '<div class="layui-col-sm8">'
+                +          '<input type="text" class="layui-input" id="temp_card" autocomplete="off">'
+                +          '</div>'
+                +     '</div>'
+                +    '</div>'
+                +  '</form>'
+                +  '<hr class="layui-bg-blue"/>'
+                +'</div>'
+        ,
+        btn:['点击发放','取消发放'],
+        btn1: function (index,layero) {
+            var temp_card = $("#temp_card").val();
+            var data_seq = $(obj).val();
+            var place_cd = $("#place_cd").val();
+            if(place_cd == ''){
+                layer.alert('位置选项不能为空！',{title:'温馨提示',icon:7})
+                return
+            }
+            if(temp_card == ''){
+                layer.alert('临时厂牌号不能为空！',{title:'温馨提示',icon:7})
+                layer.close(index)
+            }else{
+                $.get('release_tempcard',{'temp_card':temp_card,'user_id':user_id,'data_seq':data_seq,'place_cd':place_cd},function(data){
+
+                    if(typeof(data) == "string"){
+                        data  = JSON.parse(data)
+                    }
+                    if(data.result){
+                        $('.layui-layer-close').click()
+                        $(obj).addClass('hide')
+                        $(obj).parent().text('厂牌已发放')
+                        layer.msg('厂牌发放成功')
+                    }else{
+                        //layer.alert(data.msg,{title:'温馨提示',icon:5})
+                        $('.layui-layer-close').click()
+                        if(data.error == 1){
+                            layer.alert('您没有权限发放厂牌！',{title:'温馨提示',icon:5})    
+                        }else if(data.error == 0){
+                            layer.alert('您未登录，请先登录！',{title:'温馨提示',icon:5})
+                        }
+                    }
+                });
+            }
+        },
+        btn2:function (index,layero) {
+             layer.close(index);
+             layer.msg('操作已经取消');
+        }
+    });
+    $("#tempcard").focus()
+    form.render('select')
+}
+
+    function getTips(obj){
+        layer.tips($(obj).find('div:eq(0)').html(), $(obj), {
+          tips: [1, '#3595CC'],
+          area: ['300px', 'auto'],
+          shade: [0.1, '#393D49'],
+          shadeClose: true,
+          closeBtn: 1,
+          time: 60000
+        });
+    }
+            
+</script>
+
+{% endblock %}

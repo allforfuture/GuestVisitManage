@@ -1,0 +1,361 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>访客管理系统</title>
+  <link rel="stylesheet" href="{% static 'layui/css/layui.css' %}">
+  <link rel="stylesheet" href="{% static 'css/common.css' %}">
+  <link rel="stylesheet" href="{% static 'css/formSelects-v4.css' %}">
+
+  <style type="text/css">
+    .layui-table th,.layui-table td{
+      padding:9px 10px;
+    }
+    #modal{
+      top:0;left:0;width:100%;height:100%;z-index:1;
+      position:fixed;background:#000;opacity: 0.2
+    }
+  </style>
+</head>
+<body style="overflow-x:hidden;overflow-y:auto">
+<div id="modal" class="hide" onclick="hide_modal()"></div>
+
+<script type="text/javascript" src="{% static 'layui/layui.js' %}"></script>
+<!--
+<script type="text/javascript" src="{% static 'js/formSelects-v4.js' %}"></script>
+-->
+<script type="text/javascript" src="{% static 'js/common.js' %}"></script>
+
+<div class="layui-nav layui-row" style="box-shadow:0 4px 8px 0 rgba(7,17,27,.1)">
+    <div class="layui-col-sm1 cfff h60 lh60 fs16 fw_bd">访客管理系统</div>
+    <ul class="layui-col-sm8 tc">
+      {% ifequal request.session.role_text 'APPROVER' %}
+        <li class="nav-item">
+          {% ifequal page 'visit_registry' %}
+            <a class="cfff fw_bd fs16" href="/visit_registry">访客登记栏</a>
+          {% else %}
+            <a class="cfff" href="/visit_registry">访客登记栏</a>
+          {% endifequal %}
+        </li>
+        <li class="nav-item">|</li>
+        <li class="nav-item">
+          {% ifequal page 'search_appoint_page' %}
+            <a class="cfff fw_bd fs16" href="/search_appoint_page">我的预约栏</a>
+          {% else %}
+            <a class="cfff" href="/search_appoint_page">我的预约栏</a>
+          {% endifequal %}
+        </li>
+        <li class="nav-item">|</li>
+        <li class="nav-item">
+          <li class="layui-nav-item">
+            {% ifequal user_id '20160702071' %}
+              <a href="javascript:;" class="cfff">用户确认栏</a>
+              <ul class="layui-nav-child">
+                {% ifequal page 'visit_confirm' %}
+                  <li><a class="fw_bd fs16" href="/visit_confirm">客户访问确认</a></li>
+                  <li><a href="/confirm_record_page">确认记录查询</a></li>
+                {% else %}
+                  {% ifequal page 'confirm_record_page' %}
+                    <li><a href="/visit_confirm">客户访问确认</a></li>
+                    <li><a class="fw_bd fs16" href="/confirm_record_page">确认记录查询</a></li>
+                  {% else %}
+                    <li><a href="/visit_confirm">客户访问确认</a></li>
+                    <li><a href="/confirm_record_page">确认记录查询</a></li>
+                  {% endifequal %}
+                {% endifequal %}
+              </ul>
+            {% else %}
+              {% ifequal page 'visit_confirm' %}
+                <a class="fw_bd fs16 cfff" href="/visit_confirm">客户访问确认</a>
+                {% else %}
+                <a class="cfff" href="/visit_confirm">客户访问确认</a>
+              {% endifequal %}
+            {% endifequal %}
+          </li>
+        </li>
+        <li class="nav-item">|</li>
+        <li class="nav-item">
+          {% ifequal page 'index' %}
+            <a class="cfff fw_bd fs16" href="/index">发放临时厂牌</a>
+          {% else %}
+            <a class="cfff" href="/index">发放临时厂牌</a>
+          {% endifequal %}
+        </li>
+        <li class="nav-item">|</li>
+        <li class="nav-item">
+          {% ifequal page 'visit_record' %}
+            <a class="cfff fw_bd fs16" href="/visit_record">访客记录查询</a>
+          {% else %}
+            <a class="cfff" href="/visit_record">访客记录查询</a>
+          {% endifequal %}
+        </li>
+        <li class="nav-item">|</li>
+        <li class="nav-item">
+          {% ifequal page 'recycle_record' %}
+            <a href="/recycle_record" class="cfff fw_bd fs16">临时厂牌回收</a>
+          {% else %}
+            <a href="/recycle_record" class="cfff">临时厂牌回收</a>
+          {% endifequal %}
+        </li>
+      {% else %}
+        {% ifequal request.session.role_text 'User' %}
+          <li class="nav-item">
+            {% ifequal page 'visit_registry' %}
+              <a class="cfff fw_bd fs16" href="/visit_registry">访客登记栏</a>
+            {% else %}
+              <a class="cfff" href="/visit_registry">访客登记栏</a>
+            {% endifequal %}
+          </li>
+          <li class="nav-item">|</li>
+          <li class="nav-item">
+            {% ifequal page 'search_appoint_page' %}
+              <a class="cfff fw_bd fs16" href="/search_appoint_page">我的预约栏</a>
+            {% else %}
+              <a class="cfff" href="/search_appoint_page">我的预约栏</a>
+            {% endifequal %}
+          </li>
+        {% endifequal %}
+
+        {% ifequal request.session.role_text 'Security' %}
+          <li class="nav-item">
+            {% ifequal page 'visit_registry' %}
+              <a class="cfff fw_bd fs16" href="/visit_registry">访客登记栏</a>
+            {% else %}
+              <a class="cfff" href="/visit_registry">访客登记栏</a>
+            {% endifequal %}
+          </li>
+          <li class="nav-item">|</li>
+          <li class="nav-item">
+            {% ifequal page 'search_appoint_page' %}
+              <a class="cfff fw_bd fs16" href="/search_appoint_page">我的预约栏</a>
+            {% else %}
+              <a class="cfff" href="/search_appoint_page">我的预约栏</a>
+            {% endifequal %}
+          </li>
+        {% endifequal %}
+        
+        {% ifequal request.session.role_text 'Security' %}
+          <li class="nav-item">
+            {% ifequal page 'index' %}
+              <a class="cfff fw_bd fs16" href="/index">发放临时厂牌</a>
+            {% else %}
+              <a class="cfff" href="/index">发放临时厂牌</a>
+            {% endifequal %}
+          </li>
+          <li class="nav-item">|</li>
+        {% endifequal %}
+
+        {% ifequal request.session.role_text 'Security' %}
+          <li class="nav-item">
+            {% ifequal page 'visit_record' %}
+              <a class="cfff fw_bd fs16" href="/visit_record">访客记录查询</a>
+            {% else %}
+              <a class="cfff" href="/visit_record">访客记录查询</a>
+            {% endifequal %}
+          </li>
+          <li class="nav-item">|</li>
+        {% endifequal %}
+        {% ifequal request.session.role_text 'Security' %}
+          <li class="nav-item">
+            {% ifequal page 'recycle_record' %}
+              <a href="/recycle_record" class="cfff fw_bd fs16">临时厂牌回收</a>
+            {% else %}
+              <a href="/recycle_record" class="cfff">临时厂牌回收</a>
+            {% endifequal %}
+          </li>
+        {% endifequal %}
+      {% endifequal %} 
+    </ul>
+    <div class="layui-col-sm3 h60 lh60 tc" id="usershow">
+        <input type="hidden" id = "user_id" value = "{{ request.session.user_id }}" />
+        <input type="hidden" id = "role_text" value = "{{ request.session.role_text }}" />
+        <input type="hidden" id = "user_depart" value = "{{ request.session.user_depart }}" />
+        <span>用户：</span>
+        <span id="user_name">{{ request.session.user_name }}</span>&nbsp;&nbsp;&nbsp;
+        <span class="marl10">
+          <a class="cfff" href="javascript:void(0)" onclick="update_pass()">修改密码</a>
+          &nbsp;|&nbsp;
+          <a class="cfff" href="javascript:void(0)" onclick="is_logout()">点击注销</a>
+        </span>
+    </div>
+    <div class="layui-col-sm2 h60 lh60 hide"><a href="/login">点击登录</a></div>
+</div>
+
+<div class="pad0_10">
+    <input type="hidden" id="csrf_token" value="{{ csrf_token }}"/>
+    {% block content %}{% endblock %}
+</div>
+
+<script>
+  var $ = '';
+  var layer = '';
+  var form = '';
+  layui.use(['jquery','laydate','element','layer','form'],function(){
+    $ = layui.jquery;
+    layer = layui.layer;
+    form = layui.form;
+    laydate = layui.laydate;
+    laydate.render({
+        elem:'#begindatetime',
+        //type:'datetime',
+        value:getDefaultDatetime()
+    });
+    laydate.render({
+        elem:'#enddatetime',
+        //type:'datetime',
+        value:new Date()
+    });
+    laydate.render({
+        elem:'#begindate',
+        type:'date',
+        value:new Date()
+    });
+    laydate.render({
+        elem:'#enddate',
+        type:'date',
+        value:new Date()
+    });
+
+    //设置Ajax异步加载动画
+    $(function () {
+        $.ajaxSetup({
+        layerIndex:-1,
+        beforeSend: function () { //插件加载前
+            this.layerIndex = layer.load(2, { shade: [0.01, '#fff'] });
+        },
+        complete: function () { //完成加载后执行
+            layer.close(this.layerIndex); //完成加载后关闭loading
+        },
+        error: function () { //报错时执行
+            layer.alert('显示异常，请刷新后重试', {
+              skin: 'layui-layer-molv'
+              , closeBtn: 0
+              , shift: 4 //动画类型
+              });
+            }
+        });
+        $('.layui-nav-bar').addClass('hide');   //隐藏导航栏绿色下划线
+    });
+  });
+
+  function getDefaultDatetime(){
+    var now = new Date()
+    var year = now.getFullYear()
+    var month = now.getMonth() + 1
+    var day = now.getDate()
+    var date = year + '-' + month + '-' + day
+    return date;
+  }
+
+  //提示是否注销
+  function is_logout(){
+    layer.confirm('您确定要注销？', {
+        title:'温馨提示',
+        btn: ['确定','取消'], //按钮
+        icon:3
+    }, function(){
+        layer.msg('正在注销...', {icon: 1});
+        logout();
+    }, function(){
+        layer.msg('操作已取消');
+    });
+  }
+
+  //输入框获取焦点清除提示信息
+  function clear_msg(){
+    $("#upd_pass_msg").text('');
+  }
+
+  //修改密码弹窗HTML
+  function get_upd_str(){
+    str = '<div class="layui-form-item" style="margin-bottom:0">' +
+            '<div class="layui-inline">' +
+              '<label class="layui-form-label">旧&nbsp;&nbsp;&nbsp;&nbsp;密&nbsp;&nbsp;&nbsp;码:</label>' +
+              '<div class="layui-input-inline">' +
+                '<input type="password" id="passwd" required lay-verify="required" autocomplete="off"  class="layui-input" onfocus="clear_msg()">' +
+              '</div>' +
+              '<div class="layui-form-mid cred fs16" style="padding-top:12px !important">*</div>' +
+            '</div>' +
+            '<div class="layui-inline">' +
+              '<label class="layui-form-label">新&nbsp;&nbsp;&nbsp;&nbsp;密&nbsp;&nbsp;&nbsp;码:</label>' +
+              '<div class="layui-input-inline">' +
+                '<input type="password" id="new_passwd" lay-verify="email" autocomplete="off"  class="layui-input" onfocus="clear_msg()">' +
+              '</div>' +
+              '<div class="layui-form-mid cred fs16" style="padding-top:12px !important">*</div>' +
+            '</div>' +
+            '<div class="layui-inline">' +
+              '<label class="layui-form-label">重输新密码:</label>' +
+              '<div class="layui-input-inline">' +
+                '<input type="password" id="re_new_passwd" lay-verify="email" autocomplete="off"  class="layui-input" onfocus="clear_msg()">' +
+              '</div>' +
+              '<div class="layui-form-mid cred fs16" style="padding-top:12px !important">*</div>' +
+              '<div id="upd_pass_msg" class="layui-inline"></div>' +
+            '</div>' +
+          '</div>'
+    return str
+  }
+
+  //修改密码弹窗
+  function update_pass(){
+    layer.open({
+      title: '修改密码'
+      ,content:get_upd_str()
+      ,closeBtn: 0
+      ,anim: 4 //动画类型
+      ,area: ['400px','290px']
+      ,resize:false
+      ,scrollbar :false
+      ,shadeClose:true
+      ,closeBtn:1
+      ,btn:['确定修改','取消操作']
+      ,yes:function(index,layero){
+          var passwd = $("#passwd").val();
+          var new_passwd = $("#new_passwd").val();
+          var re_new_passwd = $("#re_new_passwd").val();
+          var msg = '';
+          if(passwd == '' || new_passwd == '' || re_new_passwd == ''){
+            msg = '密码输入不能为空！'
+          }else if(new_passwd != re_new_passwd){
+            msg = '新密码两次输入结果不一致！'
+          }else if(passwd == new_passwd){
+            msg = '新密码与旧密码相同！'
+          }else if(new_passwd.length < 6){
+            msg = '密码长度至少6位！'
+          }
+          if(msg != ''){
+            $("#upd_pass_msg").text(msg).removeClass('hide');
+          }else{
+            var data = {oldpasswd:passwd,newpasswd:new_passwd,csrfmiddlewaretoken:'{{ csrf_token }}'}
+            $.ajax({
+              url:'/update_passwd',
+              type:'post',
+              data:data,
+              dataType:'json',
+              success:function(data){
+                if(data.result){
+                  layer.msg('密码修改成功',{title:'提示',icon:1});
+                  layer.close(index);
+                }else{
+                  layer.alert(data.msg,{title:'温馨提示',icon:7})
+                }
+              },
+              error:function(xmlHq,status,errorThrows){
+                console.log(status)
+              }
+            });
+          }
+      },
+      btn2:function(index,layero){
+        layer.msg('操作已取消');
+      }
+    });
+    $("#passwd").focus();
+    $('.layui-layer-content').css({'padding-bottom':0,'height':'auto'});
+    $('.layui-layer-btn').css('margin-right','60px');
+  }
+
+</script>
+</body>
+</html>
